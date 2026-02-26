@@ -1,4 +1,5 @@
 import { db, isConfigured } from "../lib/firebase";
+import { APP_CONFIG } from "../config";
 import {
   collection,
   addDoc,
@@ -93,9 +94,9 @@ export const playerService = {
   },
 
   async uploadPhoto(file: File): Promise<string> {
-    const imgbbKey = import.meta.env.VITE_IMGBB_API_KEY;
-    if (!imgbbKey) {
-      throw new Error("Falta configurar la API Key de ImgBB. Revisa las variables de entorno.");
+    const imgbbKey = APP_CONFIG.imgbbApiKey;
+    if (!imgbbKey || imgbbKey === "TU_API_KEY_DE_IMGBB_AQUI") {
+      throw new Error("Falta configurar la API Key de ImgBB. Por favor, colócala en el archivo src/config.ts");
     }
 
     try {
