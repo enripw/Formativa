@@ -152,8 +152,8 @@ export const playerService = {
         img.src = event.target?.result as string;
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 800;
-          const MAX_HEIGHT = 800;
+          const MAX_WIDTH = 1200; // Aumentado para mejor calidad
+          const MAX_HEIGHT = 1200; // Aumentado para mejor calidad
           let width = img.width;
           let height = img.height;
 
@@ -187,7 +187,7 @@ export const playerService = {
               }
             },
             'image/jpeg',
-            0.7 // Calidad de compresión (70%)
+            0.85 // Calidad aumentada al 85% para mayor nitidez
           );
         };
         img.onerror = () => resolve(file); // Si falla la carga, devolver el original
