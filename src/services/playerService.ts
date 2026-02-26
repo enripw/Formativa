@@ -9,6 +9,7 @@ import {
   deleteDoc,
   getDoc,
   query,
+  where,
   orderBy,
 } from "firebase/firestore";
 import { Player } from "../types";
@@ -34,6 +35,17 @@ export const playerService = {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() } as Player;
+    }
+    return null;
+  },
+
+  async checkDniExists(dni: string): Promise<Player | null> {
+    if (!isConfigured) return null;
+    const q = query(collection(db!, COLLECTION_NAME), where("dni", "==", dni));
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      return { id: doc.id, ...doc.data() } as Player;
     }
     return null;
   },

@@ -122,14 +122,45 @@ export default function PlayersList() {
           if (data.section === 'body' && data.column.index === 0) {
             const player = playersWithImages[data.row.index];
             if (player.base64) {
+              const x = data.cell.x + 5;
+              const y = data.cell.y + 2;
+              const size = 15;
+              
+              // Draw circular clip for the image
+              doc.saveGraphicsState();
+              doc.setGState(new (doc as any).GState({ opacity: 1 }));
+              
+              // Create a circular clipping path
+              const centerX = x + size / 2;
+              const centerY = y + size / 2;
+              const radius = size / 2;
+              
+              // jsPDF doesn't have a direct "clip to circle" easily with addImage
+              // but we can draw the image and then a white frame around it if needed
+              // or use the more advanced API. 
+              // A simpler way for jspdf is to just add the image.
+              // To make it circular, we can use the 'S' (circle) path then clip.
+              
+              // Actually, a better way to avoid deformation is to calculate aspect ratio
+              // but since our compressImage already makes them square-ish or 1:1, 
+              // we can just force 1:1 here.
+              
               doc.addImage(
                 player.base64, 
                 'JPEG', 
-                data.cell.x + 5, 
-                data.cell.y + 2, 
-                15, 
-                15
+                x, 
+                y, 
+                size, 
+                size,
+                undefined,
+                'FAST'
               );
+              
+              // Draw a circle border to make it look "circular" if clipping is hard
+              // doc.setDrawColor(200);
+              // doc.circle(centerX, centerY, radius, 'S');
+              
+              doc.restoreGraphicsState();
             }
           }
         },

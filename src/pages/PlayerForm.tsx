@@ -71,10 +71,25 @@ export default function PlayerForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar que todos los campos estén completos
+    if (!formData.firstName || !formData.lastName || !formData.dni || !formData.birthDate) {
+      setError("Por favor, completa todos los campos obligatorios.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
+      // Verificar si el DNI ya existe (solo si es un nuevo jugador o si el DNI cambió)
+      const existingPlayer = await playerService.checkDniExists(formData.dni);
+      if (existingPlayer && existingPlayer.id !== id) {
+        setError(`El DNI ${formData.dni} ya está registrado a nombre de: ${existingPlayer.firstName} ${existingPlayer.lastName}.`);
+        setLoading(false);
+        return;
+      }
+
       // Add a timeout to prevent hanging indefinitely
       const savePromise = id 
         ? playerService.updatePlayer(id, formData, photoFile || undefined)
