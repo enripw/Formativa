@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { playerService } from "../services/playerService";
 import { Player } from "../types";
-import { Users, Activity } from "lucide-react";
+import { Users, Activity, Eye } from "lucide-react";
 
 export default function Dashboard() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -59,20 +60,29 @@ export default function Dashboard() {
         </div>
         <div className="divide-y divide-gray-100">
           {players.slice(0, 5).map((player) => (
-            <div key={player.id} className="p-4 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0">
-                {player.photoUrl ? (
-                  <img src={player.photoUrl} alt={player.firstName} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <Users className="w-5 h-5" />
-                  </div>
-                )}
+            <div key={player.id} className="p-4 flex items-center justify-between gap-4 hover:bg-gray-50 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0">
+                  {player.photoUrl ? (
+                    <img src={player.photoUrl} alt={player.firstName} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <Users className="w-5 h-5" />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">{player.firstName} {player.lastName}</p>
+                  <p className="text-sm text-gray-500">DNI: {player.dni}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-gray-900">{player.firstName} {player.lastName}</p>
-                <p className="text-sm text-gray-500">DNI: {player.dni}</p>
-              </div>
+              <Link
+                to={`/jugadores/ver/${player.id}`}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+              >
+                <Eye className="w-4 h-4" />
+                <span className="hidden sm:inline">Ver Ficha</span>
+              </Link>
             </div>
           ))}
           {players.length === 0 && (

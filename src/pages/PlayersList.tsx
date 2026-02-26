@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { playerService } from "../services/playerService";
 import { Player } from "../types";
-import { Plus, Edit, Trash2, Search, User, FileDown } from "lucide-react";
+import { Plus, Edit, Trash2, Search, User, FileDown, Eye } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -269,14 +269,23 @@ export default function PlayersList() {
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Link
+                          to={`/jugadores/ver/${player.id}`}
+                          className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                          title="Ver Ficha"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </Link>
+                        <Link
                           to={`/jugadores/editar/${player.id}`}
                           className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                          title="Editar"
                         >
                           <Edit className="w-5 h-5" />
                         </Link>
                         <button
                           onClick={() => setPlayerToDelete(player)}
                           className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Eliminar"
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>

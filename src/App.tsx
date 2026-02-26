@@ -8,6 +8,7 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import PlayersList from "./pages/PlayersList";
 import PlayerForm from "./pages/PlayerForm";
+import PlayerDetails from "./pages/PlayerDetails";
 import { isConfigured } from "./lib/firebase";
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/jugadores" element={<PlayersList />} />
           <Route path="/jugadores/nuevo" element={<PlayerForm />} />
           <Route path="/jugadores/editar/:id" element={<PlayerForm />} />
+          <Route path="/jugadores/ver/:id" element={<PlayerDetails />} />
         </Routes>
       </Layout>
     </Router>
