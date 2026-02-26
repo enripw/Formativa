@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { playerService } from "../services/playerService";
 import { Player } from "../types";
-import { Plus, Edit, Trash2, Search, User } from "lucide-react";
+import { Plus, Edit, Trash2, Search, User, FileDown } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function PlayersList() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -10,6 +12,7 @@ export default function PlayersList() {
   const [search, setSearch] = useState("");
   const [playerToDelete, setPlayerToDelete] = useState<Player | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     fetchPlayers();
@@ -42,6 +45,107 @@ export default function PlayersList() {
     }
   }
 
+  const getBase64ImageFromURL = (url: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.setAttribute("crossOrigin", "anonymous");
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0);
+        const dataURL = canvas.toDataURL("image/jpeg");
+        resolve(dataURL);
+      };
+      img.onerror = (error) => reject(error);
+      img.src = url;
+    });
+  };
+
+  const generatePDF = async () => {
+    if (players.length === 0) return;
+    
+    setIsExporting(true);
+    try {
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(79, 70, 229); // Indigo-600
+      doc.text("Lista de Jugadores Registrados", 14, 22);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Fecha de generación: ${new Date().toLocaleString()}`, 14, 30);
+      doc.text(`Total de jugadores: ${players.length}`, 14, 35);
+
+      // Pre-load images to avoid issues during table generation
+      const playersWithImages = await Promise.all(
+        players.map(async (p) => {
+          let base64 = "";
+          if (p.photoUrl) {
+            try {
+              base64 = await getBase64ImageFromURL(p.photoUrl);
+            } catch (e) {
+              console.warn(`No se pudo cargar la imagen para ${p.firstName}`, e);
+            }
+          }
+          return { ...p, base64 };
+        })
+      );
+
+      autoTable(doc, {
+        startY: 45,
+        head: [['Foto', 'Nombre', 'Apellido', 'DNI', 'Fecha Nac.']],
+        body: playersWithImages.map(p => [
+          "", // Placeholder for image
+          p.firstName,
+          p.lastName,
+          p.dni,
+          new Date(p.birthDate).toLocaleDateString()
+        ]),
+        columnStyles: {
+          0: { cellWidth: 25 },
+        },
+        styles: {
+          valign: 'middle',
+          fontSize: 10,
+          cellPadding: 5,
+        },
+        headStyles: {
+          fillColor: [79, 70, 229],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+        },
+        didDrawCell: (data) => {
+          if (data.section === 'body' && data.column.index === 0) {
+            const player = playersWithImages[data.row.index];
+            if (player.base64) {
+              doc.addImage(
+                player.base64, 
+                'JPEG', 
+                data.cell.x + 5, 
+                data.cell.y + 2, 
+                15, 
+                15
+              );
+            }
+          }
+        },
+        rowPageBreak: 'avoid',
+        margin: { top: 45 },
+      });
+
+      doc.save(`lista_jugadores_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Hubo un error al generar el PDF. Asegúrate de que las imágenes carguen correctamente.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const filteredPlayers = players.filter(
     (p) =>
       p.firstName.toLowerCase().includes(search.toLowerCase()) ||
@@ -53,13 +157,27 @@ export default function PlayersList() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Jugadores</h1>
-        <Link
-          to="/jugadores/nuevo"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors w-full sm:w-auto"
-        >
-          <Plus className="w-5 h-5" />
-          Nuevo Jugador
-        </Link>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <button
+            onClick={generatePDF}
+            disabled={isExporting || players.length === 0}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors flex-1 sm:flex-none disabled:opacity-50"
+          >
+            {isExporting ? (
+              <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <FileDown className="w-5 h-5" />
+            )}
+            PDF
+          </button>
+          <Link
+            to="/jugadores/nuevo"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex-1 sm:flex-none"
+          >
+            <Plus className="w-5 h-5" />
+            Nuevo
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
