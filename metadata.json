@@ -1,0 +1,5 @@
+{
+  "name": "Campeonato Infantil",
+  "description": "Administración de jugadores para campeonato de fútbol infantil",
+  "requestFramePermissions": ["camera"]
+}
