@@ -106,7 +106,7 @@ export default function UsersList() {
                         >
                           <Edit className="w-5 h-5" />
                         </Link>
-                        {currentUser?.id !== user.id && (
+                        {currentUser?.id !== user.id && user.email !== 'enripw@gmail.com' && (
                           <button
                             onClick={() => setUserToDelete(user)}
                             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"

@@ -20,6 +20,7 @@ export default function UserForm() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEditing);
   const [error, setError] = useState<string | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
     if (isEditing && id) {
@@ -37,6 +38,7 @@ export default function UserForm() {
           password: user.password || "",
           role: user.role || "admin",
         });
+        setIsSuperAdmin(user.email === 'enripw@gmail.com');
       } else {
         navigate("/usuarios");
       }
@@ -136,7 +138,8 @@ export default function UserForm() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all"
+                  disabled={isSuperAdmin}
+                  className={`focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all ${isSuperAdmin ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                   placeholder="ejemplo@correo.com"
                 />
               </div>
@@ -182,7 +185,8 @@ export default function UserForm() {
                   required
                   value={formData.role}
                   onChange={handleChange}
-                  className="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all appearance-none bg-white"
+                  disabled={isSuperAdmin}
+                  className={`focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all appearance-none ${isSuperAdmin ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
                 >
                   <option value="admin">Administrador (Acceso Total)</option>
                   <option value="viewer">Visualizador (Solo Lectura)</option>
