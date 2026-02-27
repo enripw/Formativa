@@ -6,6 +6,7 @@ import { Plus, Edit, Trash2, Search, User, FileDown, Eye } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { useAuth } from "../contexts/AuthContext";
 import { formatDate } from "../lib/dateUtils";
 
 export default function PlayersList() {
@@ -15,6 +16,8 @@ export default function PlayersList() {
   const [playerToDelete, setPlayerToDelete] = useState<Player | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     fetchPlayers();
@@ -223,13 +226,15 @@ export default function PlayersList() {
             )}
             PDF
           </button>
-          <Link
-            to="/jugadores/nuevo"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors flex-1 sm:flex-none"
-          >
-            <Plus className="w-5 h-5" />
-            Nuevo
-          </Link>
+          {isAdmin && (
+            <Link
+              to="/jugadores/nuevo"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors flex-1 sm:flex-none"
+            >
+              <Plus className="w-5 h-5" />
+              Nuevo
+            </Link>
+          )}
         </div>
       </div>
 
@@ -297,20 +302,24 @@ export default function PlayersList() {
                         >
                           <Eye className="w-5 h-5" />
                         </Link>
-                        <Link
-                          to={`/jugadores/editar/${player.id}`}
-                          className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                          title="Editar"
-                        >
-                          <Edit className="w-5 h-5" />
-                        </Link>
-                        <button
-                          onClick={() => setPlayerToDelete(player)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+                        {isAdmin && (
+                          <>
+                            <Link
+                              to={`/jugadores/editar/${player.id}`}
+                              className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                              title="Editar"
+                            >
+                              <Edit className="w-5 h-5" />
+                            </Link>
+                            <button
+                              onClick={() => setPlayerToDelete(player)}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Eliminar"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

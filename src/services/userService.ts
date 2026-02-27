@@ -7,6 +7,7 @@ const defaultUser: User = {
   email: "enripw@gmail.com",
   password: "admin",
   name: "Administrador",
+  role: "admin",
   createdAt: Date.now(),
 };
 

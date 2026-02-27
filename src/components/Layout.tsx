@@ -17,7 +17,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { name: "Panel de Control", href: "/", icon: LayoutDashboard },
     { name: "Jugadores", href: "/jugadores", icon: Users },
-    { name: "Usuarios", href: "/usuarios", icon: Shield },
+    ...(user?.role === 'admin' ? [{ name: "Usuarios", href: "/usuarios", icon: Shield }] : []),
   ];
 
   return (

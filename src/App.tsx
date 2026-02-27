@@ -36,12 +36,32 @@ export default function App() {
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/jugadores" element={<PlayersList />} />
-                    <Route path="/jugadores/nuevo" element={<PlayerForm />} />
-                    <Route path="/jugadores/editar/:id" element={<PlayerForm />} />
+                    <Route path="/jugadores/nuevo" element={
+                      <ProtectedRoute requireAdmin>
+                        <PlayerForm />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/jugadores/editar/:id" element={
+                      <ProtectedRoute requireAdmin>
+                        <PlayerForm />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/jugadores/ver/:id" element={<PlayerDetails />} />
-                    <Route path="/usuarios" element={<UsersList />} />
-                    <Route path="/usuarios/nuevo" element={<UserForm />} />
-                    <Route path="/usuarios/editar/:id" element={<UserForm />} />
+                    <Route path="/usuarios" element={
+                      <ProtectedRoute requireAdmin>
+                        <UsersList />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/usuarios/nuevo" element={
+                      <ProtectedRoute requireAdmin>
+                        <UserForm />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/usuarios/editar/:id" element={
+                      <ProtectedRoute requireAdmin>
+                        <UserForm />
+                      </ProtectedRoute>
+                    } />
                   </Routes>
                 </Layout>
               </ProtectedRoute>

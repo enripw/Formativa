@@ -5,12 +5,15 @@ import { Player } from "../types";
 import { ArrowLeft, User, Calendar, CreditCard, Clock, Cake } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { formatDate, calculateAge } from "../lib/dateUtils";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function PlayerDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     if (id) {
@@ -125,14 +128,16 @@ export default function PlayerDetails() {
         </div>
       </div>
       
-      <div className="flex justify-center">
-        <button
-          onClick={() => navigate(`/jugadores/editar/${player.id}`)}
-          className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all hover:bg-emerald-700 transition-colors flex-1 sm:flex-none"
-        >
-          Editar Información
-        </button>
-      </div>
+      {isAdmin && (
+        <div className="flex justify-center">
+          <button
+            onClick={() => navigate(`/jugadores/editar/${player.id}`)}
+            className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all hover:bg-emerald-700 transition-colors flex-1 sm:flex-none"
+          >
+            Editar Información
+          </button>
+        </div>
+      )}
     </div>
   );
 }
