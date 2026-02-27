@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { playerService } from "../services/playerService";
-import { Player } from "../types";
-import { Plus, Edit, Trash2, Search, User, FileDown, Eye } from "lucide-react";
+import { teamService } from "../services/teamService";
+import { Player, Team } from "../types";
+import { Plus, Edit, Trash2, Search, User, FileDown, Eye, Users } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -11,6 +12,7 @@ import { formatDate } from "../lib/dateUtils";
 
 export default function PlayersList() {
   const [players, setPlayers] = useState<Player[]>([]);
+  const [teams, setTeams] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [playerToDelete, setPlayerToDelete] = useState<Player | null>(null);
@@ -18,15 +20,34 @@ export default function PlayersList() {
   const [isExporting, setIsExporting] = useState(false);
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+  const isTeamAdmin = user?.role === 'team_admin';
+  const canManagePlayers = isAdmin || isTeamAdmin;
 
   useEffect(() => {
     fetchPlayers();
-  }, []);
+    if (isAdmin) {
+      fetchTeams();
+    }
+  }, [user]);
+
+  async function fetchTeams() {
+    try {
+      const data = await teamService.getTeams();
+      const teamMap: Record<string, string> = {};
+      data.forEach(t => {
+        if (t.id) teamMap[t.id] = t.name;
+      });
+      setTeams(teamMap);
+    } catch (error) {
+      console.error("Error fetching teams:", error);
+    }
+  }
 
   async function fetchPlayers() {
     try {
       setLoading(true);
-      const data = await playerService.getPlayers();
+      const teamIdFilter = isTeamAdmin ? user?.teamId : undefined;
+      const data = await playerService.getPlayers(teamIdFilter);
       setPlayers(data);
     } catch (error) {
       console.error("Error fetching players:", error);
@@ -226,7 +247,7 @@ export default function PlayersList() {
             )}
             PDF
           </button>
-          {isAdmin && (
+          {canManagePlayers && (
             <Link
               to="/jugadores/nuevo"
               className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors flex-1 sm:flex-none"
@@ -262,6 +283,7 @@ export default function PlayersList() {
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
                   <th className="p-4 font-medium text-gray-500 text-sm">Jugador</th>
+                  {isAdmin && <th className="p-4 font-medium text-gray-500 text-sm hidden lg:table-cell">Equipo</th>}
                   <th className="p-4 font-medium text-gray-500 text-sm hidden sm:table-cell">DNI</th>
                   <th className="p-4 font-medium text-gray-500 text-sm hidden md:table-cell">Fecha Nac.</th>
                   <th className="p-4 font-medium text-gray-500 text-sm text-right">Acciones</th>
@@ -285,10 +307,26 @@ export default function PlayersList() {
                           <p className="font-medium text-gray-900">
                             {player.firstName} {player.lastName}
                           </p>
-                          <p className="text-sm text-gray-500 sm:hidden">DNI: {player.dni}</p>
+                          <div className="flex flex-col sm:hidden">
+                            <p className="text-sm text-gray-500">DNI: {player.dni}</p>
+                            {isAdmin && (
+                              <p className="text-xs text-emerald-600 flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                {teams[player.teamId] || 'Sin equipo'}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
+                    {isAdmin && (
+                      <td className="p-4 text-gray-600 hidden lg:table-cell">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-gray-400" />
+                          <span>{teams[player.teamId] || 'Sin equipo'}</span>
+                        </div>
+                      </td>
+                    )}
                     <td className="p-4 text-gray-600 hidden sm:table-cell">{player.dni}</td>
                     <td className="p-4 text-gray-600 hidden md:table-cell">
                       {formatDate(player.birthDate)}
@@ -302,7 +340,7 @@ export default function PlayersList() {
                         >
                           <Eye className="w-5 h-5" />
                         </Link>
-                        {isAdmin && (
+                        {canManagePlayers && (
                           <>
                             <Link
                               to={`/jugadores/editar/${player.id}`}

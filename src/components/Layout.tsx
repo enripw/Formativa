@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Shield, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Shield, LogOut, Trophy } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -14,10 +14,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     navigate("/login");
   };
 
+  const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
+
   const navItems = [
     { name: "Panel de Control", href: "/", icon: LayoutDashboard },
     { name: "Jugadores", href: "/jugadores", icon: Users },
-    ...(user?.role === 'admin' ? [{ name: "Usuarios", href: "/usuarios", icon: Shield }] : []),
+    ...(isSuperAdmin ? [
+      { name: "Equipos", href: "/equipos", icon: Trophy },
+      { name: "Usuarios", href: "/usuarios", icon: Shield }
+    ] : []),
   ];
 
   return (

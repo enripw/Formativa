@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { userService } from "../services/userService";
-import { User } from "../types";
-import { ArrowLeft, AlertCircle, Shield, Mail, Lock, User as UserIcon } from "lucide-react";
+import { teamService } from "../services/teamService";
+import { User, Team } from "../types";
+import { ArrowLeft, AlertCircle, Shield, Mail, Lock, User as UserIcon, Users } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function UserForm() {
@@ -15,18 +16,30 @@ export default function UserForm() {
     email: "",
     password: "",
     role: "admin",
+    teamId: "",
   });
 
+  const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEditing);
   const [error, setError] = useState<string | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
+    loadTeams();
     if (isEditing && id) {
       loadUser(id);
     }
   }, [id, isEditing]);
+
+  const loadTeams = async () => {
+    try {
+      const data = await teamService.getTeams();
+      setTeams(data);
+    } catch (err) {
+      console.error("Error loading teams:", err);
+    }
+  };
 
   const loadUser = async (userId: string) => {
     try {
@@ -37,6 +50,7 @@ export default function UserForm() {
           email: user.email,
           password: user.password || "",
           role: user.role || "admin",
+          teamId: user.teamId || "",
         });
         setIsSuperAdmin(user.email === 'enripw@gmail.com');
       } else {
@@ -189,20 +203,69 @@ export default function UserForm() {
                   className={`focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all appearance-none ${isSuperAdmin ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
                 >
                   <option value="admin">Administrador (Acceso Total)</option>
+                  <option value="team_admin">Administrador de Equipo</option>
                   <option value="viewer">Visualizador (Solo Lectura)</option>
                 </select>
               </div>
             </div>
-            
-            <div className={`rounded-lg p-4 flex items-start gap-3 border ${formData.role === 'admin' ? 'bg-emerald-50 border-emerald-100' : 'bg-blue-50 border-blue-100'}`}>
-              <Shield className={`w-5 h-5 flex-shrink-0 mt-0.5 ${formData.role === 'admin' ? 'text-emerald-600' : 'text-blue-600'}`} />
+
+            {formData.role === 'team_admin' && (
               <div>
-                <h4 className={`text-sm font-medium ${formData.role === 'admin' ? 'text-emerald-800' : 'text-blue-800'}`}>
-                  {formData.role === 'admin' ? 'Permisos de Administrador' : 'Permisos de Visualizador'}
+                <label htmlFor="teamId" className="block text-sm font-medium text-gray-700 mb-1">
+                  Equipo Asignado
+                </label>
+                <div className="relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Users className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <select
+                    id="teamId"
+                    name="teamId"
+                    required={formData.role === 'team_admin'}
+                    value={formData.teamId}
+                    onChange={handleChange}
+                    className="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all appearance-none bg-white"
+                  >
+                    <option value="">Seleccionar un equipo...</option>
+                    {teams.map((team) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+            
+            <div className={`rounded-lg p-4 flex items-start gap-3 border ${
+              formData.role === 'admin' ? 'bg-emerald-50 border-emerald-100' : 
+              formData.role === 'team_admin' ? 'bg-amber-50 border-amber-100' :
+              'bg-blue-50 border-blue-100'
+            }`}>
+              <Shield className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                formData.role === 'admin' ? 'text-emerald-600' : 
+                formData.role === 'team_admin' ? 'text-amber-600' :
+                'text-blue-600'
+              }`} />
+              <div>
+                <h4 className={`text-sm font-medium ${
+                  formData.role === 'admin' ? 'text-emerald-800' : 
+                  formData.role === 'team_admin' ? 'text-amber-800' :
+                  'text-blue-800'
+                }`}>
+                  {formData.role === 'admin' ? 'Permisos de Administrador' : 
+                   formData.role === 'team_admin' ? 'Permisos de Administrador de Equipo' :
+                   'Permisos de Visualizador'}
                 </h4>
-                <p className={`text-xs mt-1 ${formData.role === 'admin' ? 'text-emerald-600' : 'text-blue-600'}`}>
+                <p className={`text-xs mt-1 ${
+                  formData.role === 'admin' ? 'text-emerald-600' : 
+                  formData.role === 'team_admin' ? 'text-amber-600' :
+                  'text-blue-600'
+                }`}>
                   {formData.role === 'admin' 
                     ? 'Este usuario tendrá acceso completo al sistema, incluyendo la gestión de jugadores y otros usuarios.'
+                    : formData.role === 'team_admin'
+                    ? 'Este usuario solo podrá gestionar los jugadores de su equipo asignado.'
                     : 'Este usuario solo podrá ver la lista de jugadores y sus fichas, sin poder crear, editar o eliminar información.'}
                 </p>
               </div>

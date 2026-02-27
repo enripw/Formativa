@@ -1,3 +1,9 @@
+export interface Team {
+  id?: string;
+  name: string;
+  createdAt?: number;
+}
+
 export interface Player {
   id?: string;
   firstName: string;
@@ -5,6 +11,7 @@ export interface Player {
   birthDate: string;
   dni: string;
   photoUrl?: string;
+  teamId: string;
   createdAt?: number;
 }
 
@@ -13,6 +20,7 @@ export interface User {
   email: string;
   password?: string;
   name: string;
-  role?: 'admin' | 'viewer';
+  role?: 'admin' | 'team_admin' | 'viewer';
+  teamId?: string;
   createdAt?: number;
 }

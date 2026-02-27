@@ -1,16 +1,23 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { playerService } from "../services/playerService";
-import { Player } from "../types";
-import { Camera, Upload, User, ArrowLeft, AlertCircle } from "lucide-react";
+import { teamService } from "../services/teamService";
+import { Player, Team } from "../types";
+import { Camera, Upload, User, ArrowLeft, AlertCircle, Users } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function PlayerForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  const isTeamAdmin = user?.role === 'team_admin';
+
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(!!id);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [teams, setTeams] = useState<Team[]>([]);
   
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -20,30 +27,47 @@ export default function PlayerForm() {
     lastName: "",
     birthDate: "",
     dni: "",
+    teamId: "",
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id) {
-      playerService.getPlayer(id).then((player) => {
-        if (player) {
-          setFormData({
-            firstName: player.firstName,
-            lastName: player.lastName,
-            birthDate: player.birthDate,
-            dni: player.dni,
-          });
-          if (player.photoUrl) {
-            setPhotoPreview(player.photoUrl);
-          }
+    const init = async () => {
+      try {
+        if (isAdmin) {
+          const teamsData = await teamService.getTeams();
+          setTeams(teamsData);
         }
-        setInitialLoading(false);
-      });
-    }
-  }, [id]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (id) {
+          const player = await playerService.getPlayer(id);
+          if (player) {
+            setFormData({
+              firstName: player.firstName,
+              lastName: player.lastName,
+              birthDate: player.birthDate,
+              dni: player.dni,
+              teamId: player.teamId,
+            });
+            if (player.photoUrl) {
+              setPhotoPreview(player.photoUrl);
+            }
+          }
+        } else if (isTeamAdmin && user?.teamId) {
+          setFormData(prev => ({ ...prev, teamId: user.teamId! }));
+        }
+      } catch (err) {
+        console.error("Error initializing form:", err);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    init();
+  }, [id, isAdmin, isTeamAdmin, user?.teamId]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -74,7 +98,7 @@ export default function PlayerForm() {
     e.preventDefault();
     
     // Validar que todos los campos estén completos
-    if (!formData.firstName || !formData.lastName || !formData.dni || !formData.birthDate) {
+    if (!formData.firstName || !formData.lastName || !formData.dni || !formData.birthDate || !formData.teamId) {
       setError("Por favor, completa todos los campos obligatorios.");
       return;
     }
@@ -240,6 +264,32 @@ export default function PlayerForm() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
             />
           </div>
+
+          {isAdmin && (
+            <div className="space-y-2">
+              <label htmlFor="teamId" className="block text-sm font-medium text-gray-700">
+                Equipo
+              </label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <select
+                  id="teamId"
+                  name="teamId"
+                  required
+                  value={formData.teamId}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all appearance-none bg-white"
+                >
+                  <option value="">Seleccionar equipo...</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">

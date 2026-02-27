@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { playerService } from "../services/playerService";
-import { Player } from "../types";
-import { ArrowLeft, User, Calendar, CreditCard, Clock, Cake } from "lucide-react";
+import { teamService } from "../services/teamService";
+import { Player, Team } from "../types";
+import { ArrowLeft, User, Calendar, CreditCard, Clock, Cake, Users } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { formatDate, calculateAge } from "../lib/dateUtils";
 import { useAuth } from "../contexts/AuthContext";
@@ -11,18 +12,38 @@ export default function PlayerDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [player, setPlayer] = useState<Player | null>(null);
+  const [team, setTeam] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  
+  const isSuperAdmin = user?.role === 'admin';
+  const isTeamAdmin = user?.role === 'team_admin';
 
   useEffect(() => {
     if (id) {
-      playerService.getPlayer(id).then((data) => {
-        setPlayer(data);
-        setLoading(false);
-      });
+      loadData();
     }
   }, [id]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const playerData = await playerService.getPlayer(id!);
+      if (playerData) {
+        setPlayer(playerData);
+        if (playerData.teamId) {
+          const teamData = await teamService.getTeamById(playerData.teamId);
+          setTeam(teamData);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading player details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const canEdit = isSuperAdmin || (isTeamAdmin && user?.teamId === player?.teamId);
 
   if (loading) {
     return <LoadingSpinner message="Cargando ficha del jugador..." />;
@@ -114,6 +135,16 @@ export default function PlayerDetails() {
             </div>
 
             <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
+              <div className="p-2 bg-white rounded-lg shadow-sm text-emerald-600">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Equipo</p>
+                <p className="text-lg font-bold text-gray-800">{team?.name || 'Sin equipo'}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
               <div className="p-2 bg-white rounded-lg shadow-sm text-amber-600">
                 <Clock className="w-5 h-5" />
               </div>
@@ -128,7 +159,7 @@ export default function PlayerDetails() {
         </div>
       </div>
       
-      {isAdmin && (
+      {canEdit && (
         <div className="flex justify-center">
           <button
             onClick={() => navigate(`/jugadores/editar/${player.id}`)}

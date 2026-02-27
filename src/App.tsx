@@ -12,6 +12,8 @@ import PlayerDetails from "./pages/PlayerDetails";
 import Login from "./pages/Login";
 import UsersList from "./pages/UsersList";
 import UserForm from "./pages/UserForm";
+import TeamsList from "./pages/TeamsList";
+import TeamForm from "./pages/TeamForm";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { isConfigured } from "./lib/firebase";
@@ -47,19 +49,36 @@ export default function App() {
                       </ProtectedRoute>
                     } />
                     <Route path="/jugadores/ver/:id" element={<PlayerDetails />} />
+                    
                     <Route path="/usuarios" element={
-                      <ProtectedRoute requireAdmin>
+                      <ProtectedRoute requireSuperAdmin>
                         <UsersList />
                       </ProtectedRoute>
                     } />
                     <Route path="/usuarios/nuevo" element={
-                      <ProtectedRoute requireAdmin>
+                      <ProtectedRoute requireSuperAdmin>
                         <UserForm />
                       </ProtectedRoute>
                     } />
                     <Route path="/usuarios/editar/:id" element={
-                      <ProtectedRoute requireAdmin>
+                      <ProtectedRoute requireSuperAdmin>
                         <UserForm />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="/equipos" element={
+                      <ProtectedRoute requireSuperAdmin>
+                        <TeamsList />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/equipos/nuevo" element={
+                      <ProtectedRoute requireSuperAdmin>
+                        <TeamForm />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/equipos/editar/:id" element={
+                      <ProtectedRoute requireSuperAdmin>
+                        <TeamForm />
                       </ProtectedRoute>
                     } />
                   </Routes>

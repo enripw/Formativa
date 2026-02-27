@@ -1,29 +1,41 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { userService } from "../services/userService";
-import { User } from "../types";
-import { Plus, Edit, Trash2, Mail, Shield, Eye } from "lucide-react";
+import { teamService } from "../services/teamService";
+import { User, Team } from "../types";
+import { Plus, Edit, Trash2, Mail, Shield, Eye, Users } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function UsersList() {
   const [users, setUsers] = useState<User[]>([]);
+  const [teams, setTeams] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
-    loadUsers();
+    loadData();
   }, []);
 
-  const loadUsers = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const data = await userService.getUsers();
-      setUsers(data);
+      const [usersData, teamsData] = await Promise.all([
+        userService.getUsers(),
+        teamService.getTeams()
+      ]);
+      
+      const teamMap: Record<string, string> = {};
+      teamsData.forEach(t => {
+        if (t.id) teamMap[t.id] = t.name;
+      });
+      
+      setUsers(usersData);
+      setTeams(teamMap);
     } catch (error) {
-      console.error("Error loading users:", error);
+      console.error("Error loading users data:", error);
     } finally {
       setLoading(false);
     }
@@ -89,6 +101,18 @@ export default function UsersList() {
                         <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full w-fit text-sm font-medium">
                           <Shield className="w-4 h-4" />
                           Administrador
+                        </div>
+                      ) : user.role === 'team_admin' ? (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full w-fit text-sm font-medium">
+                            <Users className="w-4 h-4" />
+                            Admin de Equipo
+                          </div>
+                          {user.teamId && (
+                            <div className="text-xs text-gray-500 pl-1">
+                              {teams[user.teamId] || 'Equipo no encontrado'}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full w-fit text-sm font-medium">

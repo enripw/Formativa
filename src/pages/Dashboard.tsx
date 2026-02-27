@@ -2,17 +2,20 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { playerService } from "../services/playerService";
 import { Player } from "../types";
-import { Users, Activity, Eye } from "lucide-react";
+import { Users, Activity, Eye, Trophy } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Dashboard() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const data = await playerService.getPlayers();
+        const teamIdFilter = user?.role === 'team_admin' ? user?.teamId : undefined;
+        const data = await playerService.getPlayers(teamIdFilter);
         setPlayers(data);
       } catch (error) {
         console.error("Error fetching stats:", error);
@@ -21,7 +24,7 @@ export default function Dashboard() {
       }
     }
     fetchStats();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return <LoadingSpinner message="Cargando panel de control..." />;

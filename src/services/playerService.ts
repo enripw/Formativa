@@ -17,15 +17,41 @@ import { Player } from "../types";
 const COLLECTION_NAME = "players";
 
 export const playerService = {
-  async getPlayers(): Promise<Player[]> {
+  async getPlayers(teamId?: string): Promise<Player[]> {
     if (!isConfigured) return [];
     
-    const q = query(collection(db!, COLLECTION_NAME), orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Player[];
+    try {
+      let q;
+      if (teamId) {
+        // Remove orderBy from query to avoid composite index requirement
+        q = query(
+          collection(db!, COLLECTION_NAME), 
+          where("teamId", "==", teamId)
+        );
+      } else {
+        q = query(collection(db!, COLLECTION_NAME), orderBy("createdAt", "desc"));
+      }
+      
+      const snapshot = await getDocs(q);
+      let players = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as any),
+      })) as Player[];
+
+      // Sort in memory if we filtered by teamId
+      if (teamId) {
+        players.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      }
+
+      return players;
+    } catch (error: any) {
+      console.error("Error fetching players:", error);
+      // If it's an index error, provide a helpful message even if we tried to avoid it
+      if (error.message?.includes("requires an index")) {
+        console.warn("Firestore index required. Please create it using the link in the console.");
+      }
+      throw error;
+    }
   },
 
   async getPlayer(id: string): Promise<Player | null> {
