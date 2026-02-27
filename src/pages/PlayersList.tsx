@@ -5,6 +5,7 @@ import { Player } from "../types";
 import { Plus, Edit, Trash2, Search, User, FileDown, Eye } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function PlayersList() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -227,7 +228,7 @@ export default function PlayersList() {
 
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-8 text-center text-gray-500">Cargando jugadores...</div>
+            <LoadingSpinner message="Cargando jugadores..." />
           ) : filteredPlayers.length === 0 ? (
             <div className="p-8 text-center text-gray-500">No se encontraron jugadores.</div>
           ) : (

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { playerService } from "../services/playerService";
 import { Player } from "../types";
 import { Users, Activity, Eye } from "lucide-react";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function Dashboard() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -23,12 +24,12 @@ export default function Dashboard() {
   }, []);
 
   if (loading) {
-    return <div className="flex justify-center p-8">Cargando dashboard...</div>;
+    return <LoadingSpinner message="Cargando panel de control..." />;
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Panel de Control</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">

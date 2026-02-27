@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { playerService } from "../services/playerService";
 import { Player } from "../types";
 import { ArrowLeft, User, Calendar, CreditCard, Clock } from "lucide-react";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function PlayerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -20,7 +21,7 @@ export default function PlayerDetails() {
   }, [id]);
 
   if (loading) {
-    return <div className="flex justify-center p-8 text-gray-500">Cargando ficha del jugador...</div>;
+    return <LoadingSpinner message="Cargando ficha del jugador..." />;
   }
 
   if (!player) {

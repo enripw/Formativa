@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { playerService } from "../services/playerService";
 import { Player } from "../types";
 import { Camera, Upload, User, ArrowLeft, AlertCircle } from "lucide-react";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function PlayerForm() {
   const { id } = useParams<{ id: string }>();
@@ -110,7 +111,7 @@ export default function PlayerForm() {
   };
 
   if (initialLoading) {
-    return <div className="p-8 text-center text-gray-500">Cargando datos del jugador...</div>;
+    return <LoadingSpinner message="Cargando datos del jugador..." />;
   }
 
   return (
@@ -256,7 +257,21 @@ export default function PlayerForm() {
           >
             {loading ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="animate-bounce">
+                  <svg 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    className="w-4 h-4"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 12h.01" />
+                    <path d="M8 12a4 4 0 1 0 8 0 4 4 0 1 0-8 0" />
+                  </svg>
+                </div>
                 Guardando...
               </>
             ) : (
