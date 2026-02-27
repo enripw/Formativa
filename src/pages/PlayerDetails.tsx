@@ -4,6 +4,7 @@ import { playerService } from "../services/playerService";
 import { Player } from "../types";
 import { ArrowLeft, User, Calendar, CreditCard, Clock } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { formatDate } from "../lib/dateUtils";
 
 export default function PlayerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -92,7 +93,7 @@ export default function PlayerDetails() {
               <div>
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Fecha de Nacimiento</p>
                 <p className="text-lg font-bold text-gray-800">
-                  {new Date(player.birthDate).toLocaleDateString()}
+                  {formatDate(player.birthDate)}
                 </p>
               </div>
             </div>

@@ -6,6 +6,7 @@ import { Plus, Edit, Trash2, Search, User, FileDown, Eye } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { formatDate } from "../lib/dateUtils";
 
 export default function PlayersList() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -104,7 +105,7 @@ export default function PlayersList() {
           p.firstName,
           p.lastName,
           p.dni,
-          new Date(p.birthDate).toLocaleDateString()
+          formatDate(p.birthDate)
         ]),
         columnStyles: {
           0: { cellWidth: 25 },
@@ -265,7 +266,7 @@ export default function PlayersList() {
                     </td>
                     <td className="p-4 text-gray-600 hidden sm:table-cell">{player.dni}</td>
                     <td className="p-4 text-gray-600 hidden md:table-cell">
-                      {new Date(player.birthDate).toLocaleDateString()}
+                      {formatDate(player.birthDate)}
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
