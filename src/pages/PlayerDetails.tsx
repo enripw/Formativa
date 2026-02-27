@@ -29,7 +29,7 @@ export default function PlayerDetails() {
         <p className="text-gray-500">No se encontró el jugador.</p>
         <button
           onClick={() => navigate("/jugadores")}
-          className="text-indigo-600 font-medium hover:underline"
+          className="text-emerald-600 font-medium hover:underline"
         >
           Volver a la lista
         </button>
@@ -51,7 +51,7 @@ export default function PlayerDetails() {
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {/* Header/Cover */}
-        <div className="h-32 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+        <div className="h-32 bg-gradient-to-r from-emerald-600 to-green-800"></div>
         
         <div className="px-6 pb-8">
           <div className="relative -mt-16 mb-6 flex justify-center">
@@ -75,7 +75,7 @@ export default function PlayerDetails() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-              <div className="p-2 bg-white rounded-lg shadow-sm text-indigo-600">
+              <div className="p-2 bg-white rounded-lg shadow-sm text-emerald-600">
                 <CreditCard className="w-5 h-5" />
               </div>
               <div>
@@ -114,7 +114,7 @@ export default function PlayerDetails() {
       <div className="flex justify-center">
         <button
           onClick={() => navigate(`/jugadores/editar/${player.id}`)}
-          className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
+          className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
         >
           Editar Información
         </button>

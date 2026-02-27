@@ -28,7 +28,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-indigo-50 text-indigo-600"
+                    ? "bg-emerald-50 text-emerald-600"
                     : "text-gray-600 hover:bg-gray-100"
                 )}
               >
@@ -57,7 +57,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               to={item.href}
               className={cn(
                 "flex flex-col items-center gap-1 text-xs font-medium transition-colors",
-                isActive ? "text-indigo-600" : "text-gray-500"
+                isActive ? "text-emerald-600" : "text-gray-500"
               )}
             >
               <item.icon className="w-6 h-6" />

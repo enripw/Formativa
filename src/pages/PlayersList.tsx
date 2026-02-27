@@ -72,7 +72,7 @@ export default function PlayersList() {
       
       // Header
       doc.setFontSize(20);
-      doc.setTextColor(79, 70, 229); // Indigo-600
+      doc.setTextColor(5, 150, 105); // Emerald-600
       doc.text("Lista de Jugadores Registrados", 14, 22);
       
       doc.setFontSize(10);
@@ -114,7 +114,7 @@ export default function PlayersList() {
           cellPadding: 5,
         },
         headStyles: {
-          fillColor: [79, 70, 229],
+          fillColor: [5, 150, 105],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
         },
@@ -203,7 +203,7 @@ export default function PlayersList() {
           </button>
           <Link
             to="/jugadores/nuevo"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex-1 sm:flex-none"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors flex-1 sm:flex-none"
           >
             <Plus className="w-5 h-5" />
             Nuevo
@@ -220,7 +220,7 @@ export default function PlayersList() {
               placeholder="Buscar por nombre, apellido o DNI..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
             />
           </div>
         </div>
@@ -270,14 +270,14 @@ export default function PlayersList() {
                       <div className="flex items-center justify-end gap-2">
                         <Link
                           to={`/jugadores/ver/${player.id}`}
-                          className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                           title="Ver Ficha"
                         >
                           <Eye className="w-5 h-5" />
                         </Link>
                         <Link
                           to={`/jugadores/editar/${player.id}`}
-                          className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                           title="Editar"
                         >
                           <Edit className="w-5 h-5" />
