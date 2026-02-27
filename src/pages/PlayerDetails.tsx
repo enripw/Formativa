@@ -115,7 +115,7 @@ export default function PlayerDetails() {
       <div className="flex justify-center">
         <button
           onClick={() => navigate(`/jugadores/editar/${player.id}`)}
-          className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
+          className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all hover:bg-emerald-700 transition-colors flex-1 sm:flex-none"
         >
           Editar Información
         </button>

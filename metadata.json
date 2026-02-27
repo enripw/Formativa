@@ -1,5 +1,5 @@
 {
-  "name": "Campeonato Infantil",
-  "description": "Administración de jugadores para campeonato de fútbol infantil",
+  "name": "Liga Formativa",
+  "description": "Administración de jugadores para Liga Formativa de fútbol infantil",
   "requestFramePermissions": ["camera"]
 }

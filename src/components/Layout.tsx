@@ -16,7 +16,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
         <div className="p-6">
-          <h1 className="text-xl font-bold text-gray-900">Campeonato Infantil</h1>
+          <h1 className="text-xl font-bold text-gray-900">Liga Formativa</h1>
         </div>
         <nav className="flex-1 px-4 space-y-2">
           {navItems.map((item) => {
