@@ -72,15 +72,35 @@ export default function PlayersList() {
     try {
       const doc = new jsPDF();
       
+      // Try to load the club logo
+      let logoBase64 = "";
+      try {
+        logoBase64 = await getBase64ImageFromURL("https://i.ibb.co/LdLWNxsb/image.png");
+      } catch (e) {
+        console.warn("No se pudo cargar el logo del club para el PDF", e);
+      }
+
       // Header
-      doc.setFontSize(20);
-      doc.setTextColor(5, 150, 105); // Emerald-600
-      doc.text("Lista de Jugadores Registrados", 14, 22);
-      
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.text(`Fecha de generación: ${new Date().toLocaleString()}`, 14, 30);
-      doc.text(`Total de jugadores: ${players.length}`, 14, 35);
+      if (logoBase64) {
+        doc.addImage(logoBase64, "PNG", 14, 10, 20, 20);
+        doc.setFontSize(20);
+        doc.setTextColor(5, 150, 105); // Emerald-600
+        doc.text("Lista de Jugadores Registrados", 40, 22);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Fecha de generación: ${new Date().toLocaleString()}`, 40, 30);
+        doc.text(`Total de jugadores: ${players.length}`, 40, 35);
+      } else {
+        doc.setFontSize(20);
+        doc.setTextColor(5, 150, 105); // Emerald-600
+        doc.text("Lista de Jugadores Registrados", 14, 22);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Fecha de generación: ${new Date().toLocaleString()}`, 14, 30);
+        doc.text(`Total de jugadores: ${players.length}`, 14, 35);
+      }
 
       // Pre-load images to avoid issues during table generation
       const playersWithImages = await Promise.all(
