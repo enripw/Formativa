@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { playerService } from "../services/playerService";
-import { Player } from "../types";
-import { Users, Activity, Eye, Trophy } from "lucide-react";
+import { teamService } from "../services/teamService";
+import { Player, Team } from "../types";
+import { Users, Activity, Eye, Trophy, LayoutGrid } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Dashboard() {
   const [players, setPlayers] = useState<Player[]>([]);
+  const [teamsCount, setTeamsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -15,8 +17,12 @@ export default function Dashboard() {
     async function fetchStats() {
       try {
         const teamIdFilter = user?.role === 'team_admin' ? user?.teamId : undefined;
-        const data = await playerService.getPlayers(teamIdFilter);
-        setPlayers(data);
+        const [playersData, teamsData] = await Promise.all([
+          playerService.getPlayers(teamIdFilter),
+          teamService.getTeams()
+        ]);
+        setPlayers(playersData);
+        setTeamsCount(teamsData.length);
       } catch (error) {
         console.error("Error fetching stats:", error);
       } finally {
@@ -45,8 +51,20 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {user?.role === 'admin' && (
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+              <LayoutGrid className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Total Equipos</p>
+              <p className="text-2xl font-bold text-gray-900">{teamsCount}</p>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+          <div className="p-3 bg-amber-50 text-amber-600 rounded-lg">
             <Activity className="w-6 h-6" />
           </div>
           <div>

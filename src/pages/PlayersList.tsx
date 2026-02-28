@@ -89,6 +89,34 @@ export default function PlayersList() {
     });
   };
 
+  const generateCSV = () => {
+    if (players.length === 0) return;
+
+    const headers = ["Nombre", "Apellido", "DNI", "Fecha Nacimiento", "Equipo"];
+    const rows = players.map(p => [
+      p.firstName,
+      p.lastName,
+      p.dni,
+      formatDate(p.birthDate),
+      teams[p.teamId] || "Sin equipo"
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `lista_jugadores_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const generatePDF = async () => {
     if (players.length === 0) return;
     
@@ -99,6 +127,7 @@ export default function PlayersList() {
       // Try to load the club logo
       let logoBase64 = "";
       try {
+        // Use the same logo as login but ensure it's loaded as JPEG/PNG correctly
         logoBase64 = await getBase64ImageFromURL("https://i.ibb.co/LdLWNxsb/image.png");
       } catch (e) {
         console.warn("No se pudo cargar el logo del club para el PDF", e);
@@ -106,15 +135,17 @@ export default function PlayersList() {
 
       // Header
       if (logoBase64) {
-        doc.addImage(logoBase64, "PNG", 14, 10, 20, 20);
-        doc.setFontSize(20);
+        doc.addImage(logoBase64, "PNG", 14, 10, 25, 25);
+        doc.setFontSize(18);
         doc.setTextColor(5, 150, 105); // Emerald-600
-        doc.text("Lista de Jugadores Registrados", 40, 22);
-        
-        doc.setFontSize(10);
+        doc.text("LIGA FORMATIVA", 45, 20);
+        doc.setFontSize(14);
         doc.setTextColor(100);
-        doc.text(`Fecha de generación: ${new Date().toLocaleString()}`, 40, 30);
-        doc.text(`Total de jugadores: ${players.length}`, 40, 35);
+        doc.text("Lista de Jugadores Registrados", 45, 28);
+        
+        doc.setFontSize(9);
+        doc.setTextColor(150);
+        doc.text(`Fecha: ${new Date().toLocaleString()}`, 45, 35);
       } else {
         doc.setFontSize(20);
         doc.setTextColor(5, 150, 105); // Emerald-600
@@ -123,7 +154,6 @@ export default function PlayersList() {
         doc.setFontSize(10);
         doc.setTextColor(100);
         doc.text(`Fecha de generación: ${new Date().toLocaleString()}`, 14, 30);
-        doc.text(`Total de jugadores: ${players.length}`, 14, 35);
       }
 
       // Pre-load images to avoid issues during table generation
@@ -142,22 +172,23 @@ export default function PlayersList() {
       );
 
       autoTable(doc, {
-        startY: 45,
-        head: [['Foto', 'Nombre', 'Apellido', 'DNI', 'Fecha Nac.']],
+        startY: logoBase64 ? 45 : 40,
+        head: [['Foto', 'Nombre', 'Apellido', 'DNI', 'Equipo', 'Fecha Nac.']],
         body: playersWithImages.map(p => [
           "", // Placeholder for image
           p.firstName,
           p.lastName,
           p.dni,
+          teams[p.teamId] || "Sin equipo",
           formatDate(p.birthDate)
         ]),
         columnStyles: {
-          0: { cellWidth: 25 },
+          0: { cellWidth: 20 },
         },
         styles: {
           valign: 'middle',
-          fontSize: 10,
-          cellPadding: 5,
+          fontSize: 9,
+          cellPadding: 3,
         },
         headStyles: {
           fillColor: [5, 150, 105],
@@ -168,28 +199,9 @@ export default function PlayersList() {
           if (data.section === 'body' && data.column.index === 0) {
             const player = playersWithImages[data.row.index];
             if (player.base64) {
-              const x = data.cell.x + 5;
+              const x = data.cell.x + 2;
               const y = data.cell.y + 2;
-              const size = 15;
-              
-              // Draw circular clip for the image
-              doc.saveGraphicsState();
-              doc.setGState(new (doc as any).GState({ opacity: 1 }));
-              
-              // Create a circular clipping path
-              const centerX = x + size / 2;
-              const centerY = y + size / 2;
-              const radius = size / 2;
-              
-              // jsPDF doesn't have a direct "clip to circle" easily with addImage
-              // but we can draw the image and then a white frame around it if needed
-              // or use the more advanced API. 
-              // A simpler way for jspdf is to just add the image.
-              // To make it circular, we can use the 'S' (circle) path then clip.
-              
-              // Actually, a better way to avoid deformation is to calculate aspect ratio
-              // but since our compressImage already makes them square-ish or 1:1, 
-              // we can just force 1:1 here.
+              const size = 12;
               
               doc.addImage(
                 player.base64, 
@@ -201,12 +213,6 @@ export default function PlayersList() {
                 undefined,
                 'FAST'
               );
-              
-              // Draw a circle border to make it look "circular" if clipping is hard
-              // doc.setDrawColor(200);
-              // doc.circle(centerX, centerY, radius, 'S');
-              
-              doc.restoreGraphicsState();
             }
           }
         },
@@ -235,6 +241,14 @@ export default function PlayersList() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Jugadores</h1>
         <div className="flex gap-3 w-full sm:w-auto">
+          <button
+            onClick={generateCSV}
+            disabled={players.length === 0}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors flex-1 sm:flex-none disabled:opacity-50"
+          >
+            <FileDown className="w-5 h-5" />
+            CSV
+          </button>
           <button
             onClick={generatePDF}
             disabled={isExporting || players.length === 0}

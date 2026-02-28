@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Shield, LogOut, Trophy } from "lucide-react";
+import { LayoutDashboard, Users, Shield, LogOut, Trophy, User } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -23,6 +23,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       { name: "Equipos", href: "/equipos", icon: Trophy },
       { name: "Usuarios", href: "/usuarios", icon: Shield }
     ] : []),
+    { name: "Mi Perfil", href: "/perfil", icon: User },
   ];
 
   return (

@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   loading: boolean;
 }
 
@@ -23,6 +24,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setLoading(false);
   }, []);
+
+  const refreshUser = async () => {
+    if (!user?.id) return;
+    const updatedUser = await userService.getUserById(user.id);
+    if (updatedUser) {
+      const userSession = { ...updatedUser };
+      delete userSession.password;
+      setUser(userSession);
+      localStorage.setItem('liga_formativa_current_user', JSON.stringify(userSession));
+    }
+  };
 
   const login = async (email: string, password: string) => {
     const users = await userService.getUsers();
@@ -46,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, refreshUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

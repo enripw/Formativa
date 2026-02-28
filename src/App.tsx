@@ -14,6 +14,7 @@ import UsersList from "./pages/UsersList";
 import UserForm from "./pages/UserForm";
 import TeamsList from "./pages/TeamsList";
 import TeamForm from "./pages/TeamForm";
+import Profile from "./pages/Profile";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { isConfigured } from "./lib/firebase";
@@ -37,6 +38,7 @@ export default function App() {
                 <Layout>
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
+                    <Route path="/perfil" element={<Profile />} />
                     <Route path="/jugadores" element={<PlayersList />} />
                     <Route path="/jugadores/nuevo" element={
                       <ProtectedRoute requireAdmin>
