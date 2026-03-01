@@ -178,7 +178,7 @@ export default function PlayersList() {
           "", // Placeholder for image
           p.firstName,
           p.lastName,
-          p.dni,
+          p.dni.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."),
           teams[p.teamId] || "Sin equipo",
           formatDate(p.birthDate)
         ]),
@@ -322,7 +322,7 @@ export default function PlayersList() {
                             {player.firstName} {player.lastName}
                           </p>
                           <div className="flex flex-col sm:hidden">
-                            <p className="text-sm text-gray-500">DNI: {player.dni}</p>
+                            <p className="text-sm text-gray-500">DNI: {player.dni.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}</p>
                             {isAdmin && (
                               <p className="text-xs text-emerald-600 flex items-center gap-1">
                                 <Users className="w-3 h-3" />
@@ -341,7 +341,9 @@ export default function PlayersList() {
                         </div>
                       </td>
                     )}
-                    <td className="p-4 text-gray-600 hidden sm:table-cell">{player.dni}</td>
+                    <td className="p-4 text-gray-600 hidden sm:table-cell">
+                      {player.dni.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+                    </td>
                     <td className="p-4 text-gray-600 hidden md:table-cell">
                       {formatDate(player.birthDate)}
                     </td>

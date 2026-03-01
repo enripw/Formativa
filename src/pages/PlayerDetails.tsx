@@ -111,8 +111,8 @@ export default function PlayerDetails() {
           />
 
           {/* Player Photo - Positioned in the circular frame of the image */}
-          <div className="absolute top-[20.9%] left-[50.2%] -translate-x-1/2 w-[26.2%] aspect-square z-10">
-            <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
+          <div className="absolute top-[19.8%] left-[50.5%] -translate-x-1/2 w-[26.2%] aspect-square z-10">
+            <div className="w-full h-full rounded-full overflow-hidden border-4 border-white bg-gray-100 shadow-sm">
               {player.photoUrl ? (
                 <img 
                   src={player.photoUrl} 
@@ -143,7 +143,7 @@ export default function PlayerDetails() {
 
           <div className="absolute top-[79.3%] left-[41.8%] w-[28.8%] h-[5.8%] flex items-center z-20">
             <span className="text-gray-900 font-bold text-2xl uppercase tracking-tight px-2">
-              {player.dni}
+              {player.dni.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
             </span>
           </div>
 
@@ -211,7 +211,9 @@ export default function PlayerDetails() {
               </div>
               <div>
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">DNI / Identificación</p>
-                <p className="text-lg font-bold text-gray-800">{player.dni}</p>
+                <p className="text-lg font-bold text-gray-800">
+                  {player.dni.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+                </p>
               </div>
             </div>
 
