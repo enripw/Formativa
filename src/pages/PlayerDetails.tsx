@@ -98,20 +98,20 @@ export default function PlayerDetails() {
       <div className="fixed -left-[9999px] top-0">
         <div 
           ref={credentialRef}
-          className="w-[350px] h-[630px] bg-white relative overflow-hidden flex flex-col items-center p-0"
-          style={{ fontFamily: 'sans-serif' }}
+          className="w-[1000px] h-[630px] bg-emerald-900 relative overflow-hidden"
+          style={{ fontFamily: "'Inter', sans-serif" }}
         >
-          {/* Background Pattern/Header */}
-          <div className="w-full h-40 bg-gradient-to-br from-emerald-600 to-green-900 relative">
-            <div className="absolute inset-0 opacity-20 flex items-center justify-center">
-              <IdCard className="w-32 h-32 text-white" />
-            </div>
-            <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>
-          </div>
+          {/* Background Template Image */}
+          <img 
+            src="https://files.oaiusercontent.com/file-S7M9F9Z3A8N6B2C4D5E6F7G8?se=2026-02-28T16%3A33%3A48Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3Dimage.png&sig=mFm6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6" 
+            className="absolute inset-0 w-full h-full object-cover"
+            alt="Template"
+            crossOrigin="anonymous"
+          />
 
-          {/* Photo Container */}
-          <div className="relative -mt-20 mb-4">
-            <div className="w-36 h-36 rounded-full border-8 border-white bg-gray-100 overflow-hidden shadow-xl">
+          {/* Player Photo - Positioned in the circular frame of the image */}
+          <div className="absolute top-[21.5%] left-[36.6%] w-[26.8%] aspect-square z-10">
+            <div className="w-full h-full rounded-full overflow-hidden border-[6px] border-[#00ffcc]/30 bg-gray-100">
               {player.photoUrl ? (
                 <img 
                   src={player.photoUrl} 
@@ -120,48 +120,36 @@ export default function PlayerDetails() {
                   crossOrigin="anonymous"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <User className="w-16 h-16" />
+                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                  <User className="w-32 h-32" />
                 </div>
               )}
             </div>
           </div>
 
-          {/* Player Info */}
-          <div className="text-center px-6 w-full space-y-4">
-            <div>
-              <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight leading-tight">
-                {player.firstName}
-              </h2>
-              <h2 className="text-2xl font-black text-emerald-700 uppercase tracking-tight leading-tight">
-                {player.lastName}
-              </h2>
-            </div>
-
-            <div className="h-1 w-16 bg-emerald-500 mx-auto rounded-full"></div>
-
-            <div className="grid grid-cols-1 gap-3 text-left">
-              <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">DNI / Identificación</p>
-                <p className="text-lg font-black text-gray-800 tracking-tight">{player.dni}</p>
-              </div>
-              
-              <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Fecha de Nacimiento</p>
-                <p className="text-lg font-black text-gray-800 tracking-tight">{formatDate(player.birthDate)}</p>
-              </div>
-            </div>
+          {/* Data Fields - Positioned over the white boxes in the template */}
+          <div className="absolute top-[64.5%] left-[41.5%] w-[29%] h-[6%] flex items-center z-20">
+            <span className="text-gray-900 font-bold text-2xl uppercase tracking-tight px-2">
+              {player.firstName}
+            </span>
           </div>
 
-          {/* Footer */}
-          <div className="mt-auto w-full p-5 bg-gray-900 text-white flex justify-between items-center">
-            <div>
-              <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-[0.2em]">Liga Formativa</p>
-              <p className="text-[10px] font-medium opacity-60">Credencial Oficial</p>
-            </div>
-            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-              <Trophy className="w-5 h-5 text-white" />
-            </div>
+          <div className="absolute top-[71.8%] left-[41.5%] w-[29%] h-[6%] flex items-center z-20">
+            <span className="text-gray-900 font-bold text-2xl uppercase tracking-tight px-2">
+              {player.lastName}
+            </span>
+          </div>
+
+          <div className="absolute top-[79.2%] left-[41.5%] w-[29%] h-[6%] flex items-center z-20">
+            <span className="text-gray-900 font-bold text-2xl uppercase tracking-tight px-2">
+              {player.dni}
+            </span>
+          </div>
+
+          <div className="absolute top-[86.5%] left-[56.5%] w-[14%] h-[6%] flex items-center z-20">
+            <span className="text-gray-900 font-bold text-xl uppercase tracking-tight px-2">
+              {formatDate(player.birthDate)}
+            </span>
           </div>
         </div>
       </div>
