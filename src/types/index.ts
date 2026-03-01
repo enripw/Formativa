@@ -12,6 +12,8 @@ export interface Player {
   dni: string;
   photoUrl?: string;
   teamId: string;
+  category?: string;
+  position?: string;
   createdAt?: number;
 }
 

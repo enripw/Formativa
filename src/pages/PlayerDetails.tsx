@@ -60,6 +60,7 @@ export default function PlayerDetails() {
       const dataUrl = await toPng(credentialRef.current, {
         cacheBust: true,
         backgroundColor: '#ffffff',
+        pixelRatio: 3,
       });
       
       const link = document.createElement('a');
@@ -103,15 +104,15 @@ export default function PlayerDetails() {
         >
           {/* Background Template Image */}
           <img 
-            src="https://files.oaiusercontent.com/file-S7M9F9Z3A8N6B2C4D5E6F7G8?se=2026-02-28T16%3A33%3A48Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3Dimage.png&sig=mFm6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6T5T6" 
+            src="https://i.ibb.co/VphWH9ZW/1772327301790-2.jpg" 
             className="absolute inset-0 w-full h-full object-cover"
             alt="Template"
             crossOrigin="anonymous"
           />
 
           {/* Player Photo - Positioned in the circular frame of the image */}
-          <div className="absolute top-[21.5%] left-[36.6%] w-[26.8%] aspect-square z-10">
-            <div className="w-full h-full rounded-full overflow-hidden border-[6px] border-[#00ffcc]/30 bg-gray-100">
+          <div className="absolute top-[20.9%] left-[50.2%] -translate-x-1/2 w-[26.2%] aspect-square z-10">
+            <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
               {player.photoUrl ? (
                 <img 
                   src={player.photoUrl} 
@@ -128,25 +129,25 @@ export default function PlayerDetails() {
           </div>
 
           {/* Data Fields - Positioned over the white boxes in the template */}
-          <div className="absolute top-[64.5%] left-[41.5%] w-[29%] h-[6%] flex items-center z-20">
+          <div className="absolute top-[64.7%] left-[41.8%] w-[28.8%] h-[5.8%] flex items-center z-20">
             <span className="text-gray-900 font-bold text-2xl uppercase tracking-tight px-2">
               {player.firstName}
             </span>
           </div>
 
-          <div className="absolute top-[71.8%] left-[41.5%] w-[29%] h-[6%] flex items-center z-20">
+          <div className="absolute top-[72.0%] left-[41.8%] w-[28.8%] h-[5.8%] flex items-center z-20">
             <span className="text-gray-900 font-bold text-2xl uppercase tracking-tight px-2">
               {player.lastName}
             </span>
           </div>
 
-          <div className="absolute top-[79.2%] left-[41.5%] w-[29%] h-[6%] flex items-center z-20">
+          <div className="absolute top-[79.3%] left-[41.8%] w-[28.8%] h-[5.8%] flex items-center z-20">
             <span className="text-gray-900 font-bold text-2xl uppercase tracking-tight px-2">
               {player.dni}
             </span>
           </div>
 
-          <div className="absolute top-[86.5%] left-[56.5%] w-[14%] h-[6%] flex items-center z-20">
+          <div className="absolute top-[86.6%] left-[56.8%] w-[13.8%] h-[5.8%] flex items-center z-20">
             <span className="text-gray-900 font-bold text-xl uppercase tracking-tight px-2">
               {formatDate(player.birthDate)}
             </span>
