@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { playerService } from "../services/playerService";
 import { teamService } from "../services/teamService";
 import { Player, Team } from "../types";
-import { Plus, Edit, Trash2, Search, User, FileDown, Eye, Users } from "lucide-react";
+import { Plus, Edit, Trash2, Search, User, FileDown, Eye, Users, CreditCard } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth } from "../contexts/AuthContext";
 import { formatDate } from "../lib/dateUtils";
+import { toJpeg } from "html-to-image";
+import CredentialTemplate from "../components/CredentialTemplate";
 
 export default function PlayersList() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -18,6 +20,11 @@ export default function PlayersList() {
   const [playerToDelete, setPlayerToDelete] = useState<Player | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingCredentials, setIsExportingCredentials] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
+  const [currentPlayerForBatch, setCurrentPlayerForBatch] = useState<Player | null>(null);
+  
+  const credentialRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
   const isTeamAdmin = user?.role === 'team_admin';
@@ -229,6 +236,62 @@ export default function PlayersList() {
     }
   };
 
+  const generateBatchCredentialsPDF = async () => {
+    const playersToProcess = filteredPlayers;
+    if (playersToProcess.length === 0) return;
+
+    setIsExportingCredentials(true);
+    setBatchProgress({ current: 0, total: playersToProcess.length });
+
+    try {
+      // Create PDF with custom size 90x50mm
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [90, 50]
+      });
+
+      for (let i = 0; i < playersToProcess.length; i++) {
+        const player = playersToProcess[i];
+        setBatchProgress({ current: i + 1, total: playersToProcess.length });
+        setCurrentPlayerForBatch(player);
+
+        // Wait for React to render the template and images to load
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        if (credentialRef.current) {
+          const dataUrl = await toJpeg(credentialRef.current, {
+            pixelRatio: 2,
+            cacheBust: true,
+            quality: 0.8,
+          });
+
+          if (i > 0) {
+            doc.addPage([90, 50], 'landscape');
+          }
+
+          // Calculate dimensions to fit 90x50 while maintaining aspect ratio
+          // Template is 1000x630 (1.587 ratio)
+          // 90x50 is 1.8 ratio
+          // Height 50mm -> Width 50 * 1.587 = 79.35mm
+          const imgWidth = 50 * (1000 / 630);
+          const imgHeight = 50;
+          const xOffset = (90 - imgWidth) / 2;
+
+          doc.addImage(dataUrl, 'JPEG', xOffset, 0, imgWidth, imgHeight);
+        }
+      }
+
+      doc.save(`credenciales_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error("Error generating batch credentials:", error);
+      alert("Error al generar las credenciales. Intente nuevamente.");
+    } finally {
+      setIsExportingCredentials(false);
+      setCurrentPlayerForBatch(null);
+    }
+  };
+
   const filteredPlayers = players.filter(
     (p) =>
       p.firstName.toLowerCase().includes(search.toLowerCase()) ||
@@ -261,6 +324,22 @@ export default function PlayersList() {
             )}
             PDF
           </button>
+          <button
+            onClick={generateBatchCredentialsPDF}
+            disabled={isExportingCredentials || players.length === 0}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors flex-1 sm:flex-none disabled:opacity-50"
+            title="Descargar todas las credenciales en un PDF (9x5cm)"
+          >
+            {isExportingCredentials ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs">{batchProgress.current}/{batchProgress.total}</span>
+              </div>
+            ) : (
+              <CreditCard className="w-5 h-5 text-emerald-600" />
+            )}
+            Credenciales
+          </button>
           {canManagePlayers && (
             <Link
               to="/jugadores/nuevo"
@@ -271,6 +350,13 @@ export default function PlayersList() {
             </Link>
           )}
         </div>
+      </div>
+
+      {/* Hidden Credential Template for Batch Processing */}
+      <div className="fixed -left-[9999px] top-0">
+        {currentPlayerForBatch && (
+          <CredentialTemplate ref={credentialRef} player={currentPlayerForBatch} />
+        )}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
