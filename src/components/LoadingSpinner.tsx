@@ -14,28 +14,8 @@ export default function LoadingSpinner({ message = "Cargando...", fullPage = fal
         
         {/* Animated Soccer Ball */}
         <div className="relative animate-bounce">
-          <div className="animate-[spin_2s_linear_infinite] w-16 h-16 text-emerald-600">
-            <svg 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="1.5" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-              className="w-full h-full"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="m6.7 6.7 1.3 1.3" />
-              <path d="m17.3 6.7-1.3 1.3" />
-              <path d="m17.3 17.3-1.3-1.3" />
-              <path d="m6.7 17.3 1.3-1.3" />
-              <path d="M12 2v4" />
-              <path d="M12 18v4" />
-              <path d="M2 12h4" />
-              <path d="M18 12h4" />
-              <path d="M12 12h.01" />
-              <path d="M8 12a4 4 0 1 0 8 0 4 4 0 1 0-8 0" />
-            </svg>
+          <div className="text-6xl flex items-center justify-center w-20 h-20 animate-[spin_3s_linear_infinite] drop-shadow-lg">
+            ⚽️
           </div>
         </div>
         
