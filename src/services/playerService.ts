@@ -1,4 +1,4 @@
-import { db, isConfigured } from "../lib/firebase";
+import { db, storage, isConfigured } from "../lib/firebase";
 import {
   collection,
   addDoc,
@@ -11,6 +11,7 @@ import {
   where,
   orderBy,
 } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Player } from "../types";
 
 const COLLECTION_NAME = "players";
@@ -131,42 +132,30 @@ export const playerService = {
   },
 
   async uploadPhoto(file: File): Promise<string> {
-    console.log("All env variables:", import.meta.env);
-    const blobToken = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
-    console.log("Blob token:", blobToken ? "Exists" : "Missing");
-    if (!blobToken) {
-      throw new Error("Falta configurar VITE_BLOB_READ_WRITE_TOKEN en las variables de entorno.");
+    if (!isConfigured || !storage) {
+      throw new Error("Firebase Storage no está configurado");
     }
 
     try {
       // 1. Comprimir la imagen antes de subirla
       const compressedFile = await this.compressImage(file);
       
-      console.log("Enviando imagen a Vercel Blob...");
+      console.log("Enviando imagen a Firebase Storage...");
       
       // 2. Generar un nombre de archivo único
-      const uniqueFilename = `${Date.now()}-${compressedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const uniqueFilename = `players/${Date.now()}-${compressedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       
-      // 3. Enviar a la API REST de Vercel Blob
-      const response = await fetch(`https://blob.vercel-storage.com/${uniqueFilename}`, {
-        method: "PUT",
-        headers: {
-          authorization: `Bearer ${blobToken}`,
-          "x-api-version": "7"
-        },
-        body: compressedFile,
-      });
+      // 3. Subir a Firebase Storage
+      const storageRef = ref(storage, uniqueFilename);
+      await uploadBytes(storageRef, compressedFile);
       
-      if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`Error de Vercel Blob: ${response.status} ${errorData}`);
-      }
-
-      const data = await response.json();
-      console.log("Imagen subida con éxito a Vercel Blob:", data.url);
-      return data.url;
+      // 4. Obtener la URL de descarga
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      console.log("Imagen subida con éxito a Firebase Storage:", downloadURL);
+      return downloadURL;
     } catch (error: any) {
-      console.error("Error detallado al subir la foto a Vercel Blob:", error);
+      console.error("Error detallado al subir la foto a Firebase Storage:", error);
       throw new Error(`Error al subir la foto: ${error.message || 'Desconocido'}`);
     }
   },

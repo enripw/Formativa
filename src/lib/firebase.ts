@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
 apiKey: "AIzaSyB-sB2q13cHInUMmEIuGUT2Uz6srvJDv_M",
@@ -15,6 +16,7 @@ const isConfigured = !!firebaseConfig.apiKey && !!firebaseConfig.projectId;
 
 export const app = isConfigured ? initializeApp(firebaseConfig) : null;
 export const db = isConfigured ? getFirestore(app!) : null;
+export const storage = isConfigured ? getStorage(app!) : null;
 
 // Enable offline persistence
 if (db) {
