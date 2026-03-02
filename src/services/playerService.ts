@@ -11,7 +11,7 @@ import {
   where,
   orderBy,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { Player } from "../types";
 
 const COLLECTION_NAME = "players";
@@ -107,7 +107,21 @@ export const playerService = {
 
     console.log(`Actualizando jugador ${id}...`);
     const updateData = { ...player };
+    
     if (photoFile) {
+      // 1. Intentar borrar la foto anterior si existe
+      try {
+        const oldPlayer = await this.getPlayer(id);
+        if (oldPlayer?.photoUrl && oldPlayer.photoUrl.includes('firebasestorage.googleapis.com')) {
+          const oldPhotoRef = ref(storage!, oldPlayer.photoUrl);
+          await deleteObject(oldPhotoRef);
+          console.log("Foto anterior eliminada de Storage con éxito");
+        }
+      } catch (error) {
+        console.warn("No se pudo eliminar la foto anterior de Storage:", error);
+      }
+
+      // 2. Subir la nueva foto
       console.log("Subiendo nueva foto a Storage...");
       updateData.photoUrl = await this.uploadPhoto(photoFile);
       console.log("Nueva foto subida con éxito.");
@@ -127,8 +141,30 @@ export const playerService = {
   async deletePlayer(id: string): Promise<void> {
     if (!isConfigured) throw new Error("Firebase no está configurado");
 
-    const docRef = doc(db!, COLLECTION_NAME, id);
-    await deleteDoc(docRef);
+    try {
+      // 1. Obtener los datos del jugador para ver si tiene foto
+      const player = await this.getPlayer(id);
+      
+      // 2. Si tiene foto y es de Firebase Storage, eliminarla
+      if (player?.photoUrl && player.photoUrl.includes('firebasestorage.googleapis.com')) {
+        try {
+          const photoRef = ref(storage!, player.photoUrl);
+          await deleteObject(photoRef);
+          console.log("Foto del jugador eliminada de Storage con éxito");
+        } catch (error) {
+          console.error("Error al eliminar la foto de Storage:", error);
+          // No bloqueamos el borrado del jugador si falla el borrado de la foto
+        }
+      }
+
+      // 3. Eliminar el documento de Firestore
+      const docRef = doc(db!, COLLECTION_NAME, id);
+      await deleteDoc(docRef);
+      console.log("Jugador eliminado de Firestore con éxito");
+    } catch (error) {
+      console.error("Error al eliminar el jugador:", error);
+      throw error;
+    }
   },
 
   async uploadPhoto(file: File): Promise<string> {
