@@ -131,7 +131,9 @@ export const playerService = {
   },
 
   async uploadPhoto(file: File): Promise<string> {
+    console.log("All env variables:", import.meta.env);
     const blobToken = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
+    console.log("Blob token:", blobToken ? "Exists" : "Missing");
     if (!blobToken) {
       throw new Error("Falta configurar VITE_BLOB_READ_WRITE_TOKEN en las variables de entorno.");
     }
