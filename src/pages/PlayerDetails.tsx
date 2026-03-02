@@ -78,7 +78,7 @@ export default function PlayerDetails() {
   };
 
   if (loading) {
-    return <LoadingSpinner message="Cargando ficha del jugador..." />;
+    return <LoadingSpinner message="Cargando carnet del jugador..." />;
   }
 
   if (!player) {
@@ -110,7 +110,7 @@ export default function PlayerDetails() {
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Ficha del Jugador</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Carnet del Jugador</h1>
         </div>
         
         <button

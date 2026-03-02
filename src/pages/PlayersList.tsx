@@ -525,7 +525,7 @@ export default function PlayersList() {
                         <Link
                           to={`/jugadores/ver/${player.id}`}
                           className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                          title="Ver Ficha"
+                          title="Ver Carnet"
                         >
                           <Eye className="w-5 h-5" />
                         </Link>

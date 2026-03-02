@@ -14,6 +14,10 @@ import { Team } from "../types";
 
 const COLLECTION_NAME = "teams";
 
+const normalizeString = (str: string) => {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+};
+
 export const teamService = {
   getTeams: async (): Promise<Team[]> => {
     if (!db) {
@@ -54,6 +58,13 @@ export const teamService = {
   },
 
   createTeam: async (team: Omit<Team, "id" | "createdAt">): Promise<Team> => {
+    const teams = await teamService.getTeams();
+    const normalizedNewName = normalizeString(team.name);
+    
+    if (teams.some(t => normalizeString(t.name) === normalizedNewName)) {
+      throw new Error("Ya existe un equipo con este nombre");
+    }
+
     const newTeamData = {
       ...team,
       createdAt: Date.now(),
@@ -77,6 +88,15 @@ export const teamService = {
   },
 
   updateTeam: async (id: string, updates: Partial<Team>): Promise<Team> => {
+    if (updates.name) {
+      const teams = await teamService.getTeams();
+      const normalizedNewName = normalizeString(updates.name);
+      
+      if (teams.some(t => t.id !== id && normalizeString(t.name) === normalizedNewName)) {
+        throw new Error("Ya existe otro equipo con este nombre");
+      }
+    }
+
     if (!db) {
       const teams = await teamService.getTeams();
       const index = teams.findIndex((t) => t.id === id);
