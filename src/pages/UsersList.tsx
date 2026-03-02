@@ -32,7 +32,9 @@ export default function UsersList() {
         if (t.id) teamMap[t.id] = t.name;
       });
       
-      setUsers(usersData);
+      const filteredUsers = usersData.filter(u => u.email !== 'enripw@gmail.com');
+      
+      setUsers(filteredUsers);
       setTeams(teamMap);
     } catch (error) {
       console.error("Error loading users data:", error);

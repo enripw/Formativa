@@ -199,6 +199,26 @@ export default function PlayerDetails() {
             </div>
 
             <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
+              <div className="p-2 bg-white rounded-lg shadow-sm text-emerald-600">
+                <Trophy className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Posición</p>
+                <p className="text-lg font-bold text-gray-800">{player.position || 'No especificada'}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
+              <div className="p-2 bg-white rounded-lg shadow-sm text-emerald-600">
+                <IdCard className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Categoría</p>
+                <p className="text-lg font-bold text-gray-800">{player.category || 'No especificada'}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
               <div className="p-2 bg-white rounded-lg shadow-sm text-amber-600">
                 <Clock className="w-5 h-5" />
               </div>
