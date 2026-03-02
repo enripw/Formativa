@@ -1,5 +1,4 @@
 import { db, isConfigured } from "../lib/firebase";
-import { APP_CONFIG } from "../config";
 import {
   collection,
   addDoc,
@@ -132,50 +131,40 @@ export const playerService = {
   },
 
   async uploadPhoto(file: File): Promise<string> {
-    const imgbbKey = APP_CONFIG.imgbbApiKey;
-    if (!imgbbKey || imgbbKey === "TU_API_KEY_DE_IMGBB_AQUI") {
-      throw new Error("Falta configurar la API Key de ImgBB. Por favor, colócala en el archivo src/config.ts");
+    const blobToken = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
+    if (!blobToken) {
+      throw new Error("Falta configurar VITE_BLOB_READ_WRITE_TOKEN en las variables de entorno.");
     }
 
     try {
       // 1. Comprimir la imagen antes de subirla
       const compressedFile = await this.compressImage(file);
       
-      // 2. Convertir a Base64 (ImgBB lo procesa mucho mejor desde el navegador)
-      const base64Image = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(compressedFile);
-        reader.onloadend = () => {
-          const result = reader.result as string;
-          // ImgBB espera solo la cadena base64, sin el prefijo "data:image/jpeg;base64,"
-          const base64Data = result.split(',')[1];
-          resolve(base64Data);
-        };
-        reader.onerror = reject;
-      });
-
-      console.log("Enviando imagen a ImgBB...");
+      console.log("Enviando imagen a Vercel Blob...");
       
-      // 3. Preparar el FormData
-      const formData = new FormData();
-      formData.append("image", base64Image);
+      // 2. Generar un nombre de archivo único
+      const uniqueFilename = `${Date.now()}-${compressedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       
-      // 4. Enviar a la API de ImgBB
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {
-        method: "POST",
-        body: formData,
+      // 3. Enviar a la API REST de Vercel Blob
+      const response = await fetch(`https://blob.vercel-storage.com/${uniqueFilename}`, {
+        method: "PUT",
+        headers: {
+          authorization: `Bearer ${blobToken}`,
+          "x-api-version": "7"
+        },
+        body: compressedFile,
       });
       
-      const data = await response.json();
-      
-      if (data.success) {
-        console.log("Imagen subida con éxito a ImgBB:", data.data.url);
-        return data.data.url;
-      } else {
-        throw new Error(data.error?.message || "Error desconocido en ImgBB");
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`Error de Vercel Blob: ${response.status} ${errorData}`);
       }
+
+      const data = await response.json();
+      console.log("Imagen subida con éxito a Vercel Blob:", data.url);
+      return data.url;
     } catch (error: any) {
-      console.error("Error detallado al subir la foto a ImgBB:", error);
+      console.error("Error detallado al subir la foto a Vercel Blob:", error);
       throw new Error(`Error al subir la foto: ${error.message || 'Desconocido'}`);
     }
   },
