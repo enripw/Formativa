@@ -10,6 +10,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { toJpeg } from "html-to-image";
 import { useRef } from "react";
 import CredentialTemplate from "../components/CredentialTemplate";
+import { ProgressiveImage } from "../components/ProgressiveImage";
 
 export default function PlayerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,7 @@ export default function PlayerDetails() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const credentialRef = useRef<HTMLDivElement>(null);
+  const onReadyResolveRef = useRef<(() => void) | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   
   const isSuperAdmin = user?.role === 'admin';
@@ -55,14 +57,25 @@ export default function PlayerDetails() {
     
     try {
       setIsGenerating(true);
-      // Wait a bit for any images to be ready
-      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Wait for images to load if they haven't already
+      await new Promise<void>(resolve => {
+        onReadyResolveRef.current = resolve;
+        // Fallback timeout
+        setTimeout(() => {
+          if (onReadyResolveRef.current) {
+            onReadyResolveRef.current();
+            onReadyResolveRef.current = null;
+          }
+        }, 5000);
+      });
       
       const dataUrl = await toJpeg(credentialRef.current, {
         cacheBust: true,
         backgroundColor: '#ffffff',
         pixelRatio: 2,
         quality: 0.8,
+        useCORS: true,
       });
       
       const link = document.createElement('a');
@@ -99,7 +112,16 @@ export default function PlayerDetails() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Credential Template (Hidden from view but present in DOM for generation) */}
       <div className="fixed -left-[9999px] top-0">
-        <CredentialTemplate ref={credentialRef} player={player} />
+        <CredentialTemplate 
+          ref={credentialRef} 
+          player={player} 
+          onReady={() => {
+            if (onReadyResolveRef.current) {
+              onReadyResolveRef.current();
+              onReadyResolveRef.current = null;
+            }
+          }}
+        />
       </div>
 
       <div className="flex items-center justify-between gap-4">
@@ -134,13 +156,11 @@ export default function PlayerDetails() {
         <div className="px-6 pb-8">
           <div className="relative -mt-16 mb-6 flex justify-center">
             <div className="w-32 h-32 rounded-full border-4 border-white bg-gray-100 overflow-hidden shadow-md">
-              {player.photoUrl ? (
-                <img src={player.photoUrl} alt={player.firstName} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <User className="w-16 h-16" />
-                </div>
-              )}
+              <ProgressiveImage 
+                src={player.photoUrl} 
+                alt={player.firstName} 
+                className="w-full h-full object-cover" 
+              />
             </div>
           </div>
 

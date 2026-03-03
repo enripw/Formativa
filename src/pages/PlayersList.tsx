@@ -11,6 +11,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { formatDate } from "../lib/dateUtils";
 import { toJpeg } from "html-to-image";
 import CredentialTemplate from "../components/CredentialTemplate";
+import { ProgressiveImage } from "../components/ProgressiveImage";
 
 export default function PlayersList() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -23,6 +24,7 @@ export default function PlayersList() {
   const [isExportingCredentials, setIsExportingCredentials] = useState(false);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
   const [currentPlayerForBatch, setCurrentPlayerForBatch] = useState<Player | null>(null);
+  const onReadyResolveRef = useRef<(() => void) | null>(null);
   const [teamFilter, setTeamFilter] = useState("");
   const [showTeamSelectModal, setShowTeamSelectModal] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
@@ -91,22 +93,67 @@ export default function PlayersList() {
     }
   }
 
-  const getBase64ImageFromURL = (url: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.setAttribute("crossOrigin", "anonymous");
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0);
-        const dataURL = canvas.toDataURL("image/jpeg");
-        resolve(dataURL);
-      };
-      img.onerror = (error) => reject(error);
-      img.src = url;
-    });
+  const getBase64ImageFromURL = async (url: string): Promise<string> => {
+    if (!url) throw new Error('URL is empty');
+    if (url.startsWith('data:image')) return url;
+
+    try {
+      // Try direct fetch first
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (directError) {
+      console.warn('Direct fetch failed, trying proxies...', directError);
+      
+      const encodedUrl = encodeURIComponent(url);
+      const proxies = [
+        { url: `https://api.allorigins.win/raw?url=${encodedUrl}`, type: 'blob' },
+        { url: `https://api.allorigins.win/get?url=${encodedUrl}`, type: 'json' },
+        { url: `https://api.codetabs.com/v1/proxy?quest=${encodedUrl}`, type: 'blob' },
+        { url: `https://corsproxy.io/?${encodedUrl}`, type: 'blob' },
+        { url: `https://thingproxy.freeboard.io/fetch/${encodedUrl}`, type: 'blob' },
+        { url: `https://yacdn.org/proxy/${url}`, type: 'blob' }
+      ];
+
+      for (const proxy of proxies) {
+        try {
+          const response = await fetch(proxy.url);
+          if (!response.ok) continue;
+          
+          if (proxy.type === 'json') {
+            const data = await response.json();
+            if (data.contents && data.contents.startsWith('data:image')) {
+              return data.contents;
+            }
+          } else {
+            const blob = await response.blob();
+            // Reject if it's obviously an HTML error page
+            if (blob.type.includes('text/html')) {
+              continue;
+            }
+
+            return await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
+          }
+        } catch (proxyError) {
+          // Ignore proxy errors and try the next one
+        }
+      }
+      
+      console.error('All proxies failed for URL:', url);
+      // Return a transparent 1x1 pixel to prevent html2canvas from crashing
+      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+    }
   };
 
   const generateCSV = () => {
@@ -148,7 +195,7 @@ export default function PlayersList() {
       let logoBase64 = "";
       try {
         // Use the same logo as login but ensure it's loaded as JPEG/PNG correctly
-        logoBase64 = await getBase64ImageFromURL("https://i.ibb.co/LdLWNxsb/image.png");
+        logoBase64 = await getBase64ImageFromURL("https://firebasestorage.googleapis.com/v0/b/ligaformativa-3db31.firebasestorage.app/o/players%2Flogo.png?alt=media");
       } catch (e) {
         console.warn("No se pudo cargar el logo del club para el PDF", e);
       }
@@ -275,16 +322,28 @@ export default function PlayersList() {
       for (let i = 0; i < playersToProcess.length; i++) {
         const player = playersToProcess[i];
         setBatchProgress({ current: i + 1, total: playersToProcess.length });
-        setCurrentPlayerForBatch(player);
-
-        // Wait for React to render the template and images to load
-        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Wait for React to render the template and images to load via onReady
+        await new Promise<void>(resolve => {
+          onReadyResolveRef.current = resolve;
+          setCurrentPlayerForBatch(player);
+          
+          // Fallback timeout in case onReady never fires
+          setTimeout(() => {
+            if (onReadyResolveRef.current) {
+              console.warn("Credential template onReady timeout fallback triggered");
+              onReadyResolveRef.current();
+              onReadyResolveRef.current = null;
+            }
+          }, 5000);
+        });
 
         if (credentialRef.current) {
           const dataUrl = await toJpeg(credentialRef.current, {
             pixelRatio: 2,
             cacheBust: true,
             quality: 0.8,
+            useCORS: true,
           });
 
           if (i > 0) {
@@ -428,7 +487,17 @@ export default function PlayersList() {
       {/* Hidden Credential Template for Batch Processing */}
       <div className="fixed -left-[9999px] top-0">
         {currentPlayerForBatch && (
-          <CredentialTemplate ref={credentialRef} player={currentPlayerForBatch} />
+          <CredentialTemplate 
+            key={currentPlayerForBatch.id}
+            ref={credentialRef} 
+            player={currentPlayerForBatch} 
+            onReady={() => {
+              if (onReadyResolveRef.current) {
+                onReadyResolveRef.current();
+                onReadyResolveRef.current = null;
+              }
+            }}
+          />
         )}
       </div>
 
@@ -482,13 +551,11 @@ export default function PlayersList() {
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0">
-                          {player.photoUrl ? (
-                            <img src={player.photoUrl} alt={player.firstName} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400">
-                              <User className="w-5 h-5" />
-                            </div>
-                          )}
+                          <ProgressiveImage 
+                            src={player.photoUrl} 
+                            alt={player.firstName} 
+                            className="w-full h-full object-cover" 
+                          />
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">

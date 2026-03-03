@@ -6,6 +6,7 @@ import { Player, Team } from "../types";
 import { Camera, Upload, User, ArrowLeft, AlertCircle, Users } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth } from "../contexts/AuthContext";
+import { ProgressiveImage } from "../components/ProgressiveImage";
 
 export default function PlayerForm() {
   const { id } = useParams<{ id: string }>();
@@ -160,11 +161,11 @@ export default function PlayerForm() {
         {/* Photo Upload Section */}
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-32 h-32 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
-            {photoPreview ? (
-              <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
-            ) : (
-              <User className="w-12 h-12 text-gray-400" />
-            )}
+            <ProgressiveImage 
+              src={photoPreview || undefined} 
+              alt="Preview" 
+              className="w-full h-full object-cover" 
+            />
           </div>
           
           <div className="flex gap-3">

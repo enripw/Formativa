@@ -181,9 +181,14 @@ export const playerService = {
       // 2. Generar un nombre de archivo único
       const uniqueFilename = `players/${Date.now()}-${compressedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       
-      // 3. Subir a Firebase Storage
+      // 3. Subir a Firebase Storage con metadatos de caché
       const storageRef = ref(storage, uniqueFilename);
-      await uploadBytes(storageRef, compressedFile);
+      const metadata = {
+        cacheControl: 'public,max-age=31536000', // 1 año de caché
+        contentType: 'image/jpeg'
+      };
+      
+      await uploadBytes(storageRef, compressedFile, metadata);
       
       // 4. Obtener la URL de descarga
       const downloadURL = await getDownloadURL(storageRef);
@@ -206,8 +211,8 @@ export const playerService = {
         img.src = event.target?.result as string;
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 1200; // Aumentado para mejor calidad
-          const MAX_HEIGHT = 1200; // Aumentado para mejor calidad
+          const MAX_WIDTH = 800; // Reducido para mayor agilidad
+          const MAX_HEIGHT = 800; // Reducido para mayor agilidad
           let width = img.width;
           let height = img.height;
 
@@ -241,7 +246,7 @@ export const playerService = {
               }
             },
             'image/jpeg',
-            0.85 // Calidad aumentada al 85% para mayor nitidez
+            0.75 // Calidad reducida al 75% para mayor agilidad sin perder mucha nitidez
           );
         };
         img.onerror = () => resolve(file); // Si falla la carga, devolver el original

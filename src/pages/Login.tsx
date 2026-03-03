@@ -35,7 +35,7 @@ export default function Login() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <img 
-            src="https://i.ibb.co/LdLWNxsb/image.png" 
+            src="https://firebasestorage.googleapis.com/v0/b/ligaformativa-3db31.firebasestorage.app/o/players%2Flogo.png?alt=media" 
             alt="Logo Liga Formativa" 
             className="w-24 h-24 object-contain"
             onError={(e) => {

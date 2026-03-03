@@ -32,7 +32,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
         <div className="p-6 flex items-center gap-3">
           <img 
-            src="https://i.ibb.co/LdLWNxsb/image.png" 
+            src="https://firebasestorage.googleapis.com/v0/b/ligaformativa-3db31.firebasestorage.app/o/players%2Flogo.png?alt=media" 
             alt="Logo" 
             className="w-10 h-10 object-contain"
             onError={(e) => {

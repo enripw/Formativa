@@ -6,6 +6,7 @@ import { Player, Team } from "../types";
 import { Users, Activity, Eye, Trophy, LayoutGrid } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth } from "../contexts/AuthContext";
+import { ProgressiveImage } from "../components/ProgressiveImage";
 
 export default function Dashboard() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -85,13 +86,11 @@ export default function Dashboard() {
             <div key={player.id} className="p-4 flex items-center justify-between gap-4 hover:bg-gray-50 transition-colors">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0">
-                  {player.photoUrl ? (
-                    <img src={player.photoUrl} alt={player.firstName} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <Users className="w-5 h-5" />
-                    </div>
-                  )}
+                  <ProgressiveImage 
+                    src={player.photoUrl} 
+                    alt={player.firstName} 
+                    className="w-full h-full object-cover" 
+                  />
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">{player.firstName} {player.lastName}</p>
