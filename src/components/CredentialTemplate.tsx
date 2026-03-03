@@ -9,6 +9,7 @@ interface CredentialTemplateProps {
 }
 
 const imageCache: Record<string, string> = {};
+const CACHE_BUSTER = Date.now();
 
 const getBase64ImageFromURL = async (url: string): Promise<string> => {
   if (!url) throw new Error('URL is empty');
@@ -95,7 +96,7 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
     let isMounted = true;
 
     const loadImages = async () => {
-      const bgPromise = getBase64ImageFromURL("https://firebasestorage.googleapis.com/v0/b/ligaformativa-3db31.firebasestorage.app/o/players%2Fcredencial.jpg?alt=media")
+      const bgPromise = getBase64ImageFromURL(`https://firebasestorage.googleapis.com/v0/b/ligaformativa-3db31.firebasestorage.app/o/players%2Fcredencial.jpg?alt=media&v=${CACHE_BUSTER}`)
         .catch((e) => {
           console.error("Error loading template background", e);
           return "";
