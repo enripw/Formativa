@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -15,18 +15,9 @@ appId: "1:1033762885243:web:a02b5c2b19e7ba666a5cde"
 const isConfigured = !!firebaseConfig.apiKey && !!firebaseConfig.projectId;
 
 export const app = isConfigured ? initializeApp(firebaseConfig) : null;
-export const db = isConfigured ? getFirestore(app!) : null;
+export const db = isConfigured ? initializeFirestore(app!, {
+  localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
+}) : null;
 export const storage = isConfigured ? getStorage(app!) : null;
-
-// Enable offline persistence
-if (db) {
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn('Firestore persistence failed: Multiple tabs open');
-    } else if (err.code === 'unimplemented') {
-      console.warn('Firestore persistence failed: Browser not supported');
-    }
-  });
-}
 
 export { isConfigured };
