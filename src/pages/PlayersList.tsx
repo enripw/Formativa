@@ -350,7 +350,6 @@ export default function PlayersList() {
             pixelRatio: 2,
             cacheBust: true,
             quality: 0.8,
-            useCORS: true,
           });
 
           if (i > 0) {

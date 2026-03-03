@@ -29,7 +29,6 @@ export default function PlayerForm() {
     birthDate: "",
     dni: "",
     teamId: "",
-    category: "",
     position: "",
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -52,7 +51,6 @@ export default function PlayerForm() {
               birthDate: player.birthDate,
               dni: player.dni,
               teamId: player.teamId,
-              category: player.category || "",
               position: player.position || "",
             });
             if (player.photoUrl) {
@@ -267,21 +265,6 @@ export default function PlayerForm() {
               value={formData.birthDate}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-              Categoría
-            </label>
-            <input
-              type="text"
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-              placeholder="Ej. 2010"
             />
           </div>
 

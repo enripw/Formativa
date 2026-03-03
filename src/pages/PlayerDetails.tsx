@@ -75,7 +75,6 @@ export default function PlayerDetails() {
         backgroundColor: '#ffffff',
         pixelRatio: 2,
         quality: 0.8,
-        useCORS: true,
       });
       
       const link = document.createElement('a');
@@ -234,7 +233,9 @@ export default function PlayerDetails() {
               </div>
               <div>
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Categoría</p>
-                <p className="text-lg font-bold text-gray-800">{player.category || 'No especificada'}</p>
+                <p className="text-lg font-bold text-gray-800">
+                  {player.birthDate ? player.birthDate.split('-')[0] : 'No especificada'}
+                </p>
               </div>
             </div>
 
