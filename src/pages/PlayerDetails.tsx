@@ -23,8 +23,9 @@ export default function PlayerDetails() {
   const onReadyResolveRef = useRef<(() => void) | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   
-  const isSuperAdmin = user?.role === 'admin';
+  const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
   const isTeamAdmin = user?.role === 'team_admin';
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     if (id) {
@@ -50,7 +51,7 @@ export default function PlayerDetails() {
     }
   };
 
-  const canEdit = isSuperAdmin || (isTeamAdmin && user?.teamId === player?.teamId);
+  const canEdit = isAdmin || (isTeamAdmin && user?.teamId === player?.teamId);
 
   const generateCredential = async () => {
     if (!credentialRef.current) return;
@@ -134,18 +135,20 @@ export default function PlayerDetails() {
           <h1 className="text-2xl font-bold text-gray-900">Carnet del Jugador</h1>
         </div>
         
-        <button
-          onClick={generateCredential}
-          disabled={isGenerating}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50"
-        >
-          {isGenerating ? (
-            <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-          ) : (
-            <Download className="w-5 h-5 text-emerald-600" />
-          )}
-          <span className="hidden sm:inline">Descargar Credencial</span>
-        </button>
+        {isSuperAdmin && (
+          <button
+            onClick={generateCredential}
+            disabled={isGenerating}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50"
+          >
+            {isGenerating ? (
+              <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <Download className="w-5 h-5 text-emerald-600" />
+            )}
+            <span className="hidden sm:inline">Descargar Credencial</span>
+          </button>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

@@ -33,6 +33,7 @@ export default function PlayersList() {
   const downloadMenuRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+  const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
   const isTeamAdmin = user?.role === 'team_admin';
   const canManagePlayers = isAdmin || isTeamAdmin;
 
@@ -401,82 +402,84 @@ export default function PlayersList() {
         <h1 className="text-2xl font-bold text-gray-900">Jugadores</h1>
         <div className="flex gap-2 w-full sm:w-auto items-center">
           {/* Dropdown for Downloads */}
-          <div className="relative flex-1 sm:flex-none" ref={downloadMenuRef}>
-            <button
-              onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-              className="inline-flex items-center justify-center gap-2 w-full px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-            >
-              <FileDown className="w-5 h-5 text-emerald-600" />
-              <span className="hidden xs:inline">Exportar</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${showDownloadMenu ? 'rotate-180' : ''}`} />
-            </button>
+          {isSuperAdmin && (
+            <div className="relative flex-1 sm:flex-none" ref={downloadMenuRef}>
+              <button
+                onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                className="inline-flex items-center justify-center gap-2 w-full px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              >
+                <FileDown className="w-5 h-5 text-emerald-600" />
+                <span className="hidden xs:inline">Exportar</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showDownloadMenu ? 'rotate-180' : ''}`} />
+              </button>
 
-            {showDownloadMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                <button
-                  onClick={() => {
-                    generatePDF();
-                    setShowDownloadMenu(false);
-                  }}
-                  disabled={isExporting || players.length === 0}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50"
-                >
-                  {isExporting ? (
-                    <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <FileText className="w-4 h-4" />
-                  )}
-                  Descargar PDF
-                </button>
-                
-                <button
-                  onClick={() => {
-                    generateCSV();
-                    setShowDownloadMenu(false);
-                  }}
-                  disabled={players.length === 0}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50"
-                >
-                  <Table className="w-4 h-4" />
-                  Descargar CSV
-                </button>
-
-                <div className="h-px bg-gray-100 my-1" />
-
-                <button
-                  onClick={() => {
-                    generateBatchCredentialsPDF();
-                    setShowDownloadMenu(false);
-                  }}
-                  disabled={isExportingCredentials || players.length === 0}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50"
-                >
-                  {isExportingCredentials ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  ) : (
-                    <CreditCard className="w-4 h-4" />
-                  )}
-                  Credenciales (Filtrados)
-                </button>
-
-                {isAdmin && (
+              {showDownloadMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   <button
                     onClick={() => {
-                      setShowTeamSelectModal(true);
+                      generatePDF();
                       setShowDownloadMenu(false);
                     }}
-                    disabled={isExportingCredentials || Object.keys(teams).length === 0}
+                    disabled={isExporting || players.length === 0}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50"
                   >
-                    <Users className="w-4 h-4" />
-                    Credenciales por Equipo
+                    {isExporting ? (
+                      <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <FileText className="w-4 h-4" />
+                    )}
+                    Descargar PDF
                   </button>
-                )}
-              </div>
-            )}
-          </div>
+                  
+                  <button
+                    onClick={() => {
+                      generateCSV();
+                      setShowDownloadMenu(false);
+                    }}
+                    disabled={players.length === 0}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50"
+                  >
+                    <Table className="w-4 h-4" />
+                    Descargar CSV
+                  </button>
+
+                  <div className="h-px bg-gray-100 my-1" />
+
+                  <button
+                    onClick={() => {
+                      generateBatchCredentialsPDF();
+                      setShowDownloadMenu(false);
+                    }}
+                    disabled={isExportingCredentials || players.length === 0}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50"
+                  >
+                    {isExportingCredentials ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : (
+                      <CreditCard className="w-4 h-4" />
+                    )}
+                    Credenciales (Filtrados)
+                  </button>
+
+                  {isAdmin && (
+                    <button
+                      onClick={() => {
+                        setShowTeamSelectModal(true);
+                        setShowDownloadMenu(false);
+                      }}
+                      disabled={isExportingCredentials || Object.keys(teams).length === 0}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50"
+                    >
+                      <Users className="w-4 h-4" />
+                      Credenciales por Equipo
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {canManagePlayers && (
             <Link
