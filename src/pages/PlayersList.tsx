@@ -325,17 +325,24 @@ export default function PlayersList() {
         
         // Wait for React to render the template and images to load via onReady
         await new Promise<void>(resolve => {
-          onReadyResolveRef.current = resolve;
+          let timeoutId: NodeJS.Timeout;
+          
+          const resolveWrapper = () => {
+            clearTimeout(timeoutId);
+            resolve();
+          };
+          
+          onReadyResolveRef.current = resolveWrapper;
           setCurrentPlayerForBatch(player);
           
-          // Fallback timeout in case onReady never fires
-          setTimeout(() => {
-            if (onReadyResolveRef.current) {
-              console.warn("Credential template onReady timeout fallback triggered");
+          // Fallback timeout in case onReady never fires (increased to 30s to allow slow proxies)
+          timeoutId = setTimeout(() => {
+            if (onReadyResolveRef.current === resolveWrapper) {
+              console.warn(`Credential template onReady timeout fallback triggered for ${player.firstName}`);
               onReadyResolveRef.current();
               onReadyResolveRef.current = null;
             }
-          }, 5000);
+          }, 30000);
         });
 
         if (credentialRef.current) {

@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useState } from 'react';
+import React, { forwardRef, useEffect, useState, useRef } from 'react';
 import { Player } from '../types';
 import { User } from 'lucide-react';
 import { formatDate } from '../lib/dateUtils';
@@ -85,6 +85,12 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
   const [templateBase64, setTemplateBase64] = useState<string>("");
   const [photoBase64, setPhotoBase64] = useState<string>("");
 
+  const onReadyRef = useRef(onReady);
+
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  }, [onReady]);
+
   useEffect(() => {
     let isMounted = true;
     let loadedCount = 0;
@@ -92,11 +98,11 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
 
     const checkReady = () => {
       loadedCount++;
-      if (loadedCount >= totalToLoad && isMounted && onReady) {
+      if (loadedCount >= totalToLoad && isMounted && onReadyRef.current) {
         // Small delay to ensure React has painted the base64 images
         setTimeout(() => {
-          if (isMounted) onReady();
-        }, 500);
+          if (isMounted && onReadyRef.current) onReadyRef.current();
+        }, 1000); // Increased to 1000ms to be absolutely sure the image is rendered
       }
     };
     
@@ -133,7 +139,7 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
     return () => {
       isMounted = false;
     };
-  }, [player.photoUrl, onReady]);
+  }, [player.photoUrl]);
 
   return (
     <div 
