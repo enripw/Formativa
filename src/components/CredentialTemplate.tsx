@@ -93,45 +93,34 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
 
   useEffect(() => {
     let isMounted = true;
-    let loadedCount = 0;
-    const totalToLoad = player.photoUrl ? 2 : 1;
 
-    const checkReady = () => {
-      loadedCount++;
-      if (loadedCount >= totalToLoad && isMounted && onReadyRef.current) {
-        // Small delay to ensure React has painted the base64 images
-        setTimeout(() => {
-          if (isMounted && onReadyRef.current) onReadyRef.current();
-        }, 1000); // Increased to 1000ms to be absolutely sure the image is rendered
-      }
-    };
-    
     const loadImages = async () => {
-      try {
-        const bg = await getBase64ImageFromURL("https://firebasestorage.googleapis.com/v0/b/ligaformativa-3db31.firebasestorage.app/o/players%2Fcredencial.jpg?alt=media");
-        if (isMounted) {
-          setTemplateBase64(bg);
-          checkReady();
-        }
-      } catch (e) {
-        console.error("Error loading template background", e);
-        checkReady(); // Proceed anyway to avoid hanging
-      }
+      const bgPromise = getBase64ImageFromURL("https://firebasestorage.googleapis.com/v0/b/ligaformativa-3db31.firebasestorage.app/o/players%2Fcredencial.jpg?alt=media")
+        .catch((e) => {
+          console.error("Error loading template background", e);
+          return "";
+        });
 
-      if (player.photoUrl) {
-        try {
-          const photo = await getBase64ImageFromURL(player.photoUrl);
-          if (isMounted) {
-            setPhotoBase64(photo);
-            checkReady();
-          }
-        } catch (e) {
-          console.error("Error loading player photo", e);
-          checkReady(); // Proceed anyway
+      const photoPromise = player.photoUrl
+        ? getBase64ImageFromURL(player.photoUrl).catch((e) => {
+            console.error("Error loading player photo", e);
+            return "";
+          })
+        : Promise.resolve("");
+
+      const [bg, photo] = await Promise.all([bgPromise, photoPromise]);
+
+      if (!isMounted) return;
+
+      if (bg) setTemplateBase64(bg);
+      setPhotoBase64(photo || "");
+
+      // Small delay to ensure React has painted the base64 images
+      setTimeout(() => {
+        if (isMounted && onReadyRef.current) {
+          onReadyRef.current();
         }
-      } else {
-        if (isMounted) setPhotoBase64("");
-      }
+      }, 1000);
     };
 
     loadImages();
