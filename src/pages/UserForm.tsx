@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { userService } from "../services/userService";
 import { teamService } from "../services/teamService";
 import { User, Team } from "../types";
-import { ArrowLeft, AlertCircle, Shield, Mail, Lock, User as UserIcon, Users } from "lucide-react";
+import { ArrowLeft, AlertCircle, Shield, Mail, Lock, User as UserIcon, Users, Camera, Upload } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { ProgressiveImage } from "../components/ProgressiveImage";
 
 export default function UserForm() {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +25,11 @@ export default function UserForm() {
   const [initialLoading, setInitialLoading] = useState(isEditing);
   const [error, setError] = useState<string | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     loadTeams();
@@ -53,6 +59,9 @@ export default function UserForm() {
           teamId: user.teamId || "",
         });
         setIsSuperAdmin(user.email === 'enripw@gmail.com');
+        if (user.photoUrl) {
+          setPhotoPreview(user.photoUrl);
+        }
       } else {
         navigate("/usuarios");
       }
@@ -69,6 +78,24 @@ export default function UserForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      if (file.size > 5 * 1024 * 1024) {
+        setError("La imagen es demasiado grande. El tamaño máximo permitido es 5MB.");
+        return;
+      }
+
+      setPhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -76,9 +103,9 @@ export default function UserForm() {
 
     try {
       if (isEditing && id) {
-        await userService.updateUser(id, formData);
+        await userService.updateUser(id, formData, photoFile || undefined);
       } else {
-        await userService.createUser(formData);
+        await userService.createUser(formData, photoFile || undefined);
       }
       navigate("/usuarios");
     } catch (err: any) {
@@ -114,7 +141,56 @@ export default function UserForm() {
       )}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 md:p-8 space-y-6">
+        <div className="p-6 md:p-8 space-y-8">
+          {/* Photo Upload Section */}
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative w-32 h-32 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden shadow-inner">
+              {photoPreview ? (
+                <ProgressiveImage 
+                  src={photoPreview} 
+                  alt="Preview" 
+                  className="w-full h-full object-cover" 
+                />
+              ) : (
+                <UserIcon className="w-16 h-16 text-gray-300" />
+              )}
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                <Camera className="w-4 h-4 text-emerald-600" />
+                Cámara
+              </button>
+              <button
+                type="button"
+                onClick={() => galleryInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                <Upload className="w-4 h-4 text-blue-600" />
+                Galería
+              </button>
+              <input
+                type="file"
+                ref={cameraInputRef}
+                onChange={handlePhotoChange}
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+              />
+              <input
+                type="file"
+                ref={galleryInputRef}
+                onChange={handlePhotoChange}
+                accept="image/*"
+                className="hidden"
+              />
+            </div>
+          </div>
+
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">

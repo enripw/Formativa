@@ -9,7 +9,8 @@ import {
   query,
   where
 } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { db, storage, isConfigured } from "../lib/firebase";
 import { User } from "../types";
 
 const COLLECTION_NAME = "users";
@@ -90,7 +91,7 @@ export const userService = {
     }
   },
 
-  createUser: async (user: Omit<User, "id" | "createdAt">): Promise<User> => {
+  createUser: async (user: Omit<User, "id" | "createdAt">, photoFile?: File): Promise<User> => {
     if (!db) {
       const users = await userService.getUsers();
       if (users.some(u => u.email === user.email)) {
@@ -114,8 +115,14 @@ export const userService = {
         throw new Error("El correo electrónico ya está registrado");
       }
 
+      let photoUrl = "";
+      if (photoFile) {
+        photoUrl = await userService.uploadPhoto(photoFile);
+      }
+
       const newUser = {
         ...user,
+        photoUrl,
         createdAt: Date.now(),
       };
       
@@ -127,7 +134,7 @@ export const userService = {
     }
   },
 
-  updateUser: async (id: string, updates: Partial<User>): Promise<User> => {
+  updateUser: async (id: string, updates: Partial<User>, photoFile?: File): Promise<User> => {
     if (!db) {
       const users = await userService.getUsers();
       const index = users.findIndex((u) => u.id === id);
@@ -164,7 +171,8 @@ export const userService = {
       }
       
       const userToUpdate = docSnap.data() as User;
-      
+      const updateData = { ...updates };
+
       if (userToUpdate.email === SUPERADMIN_EMAIL) {
         if (updates.email && updates.email !== SUPERADMIN_EMAIL) {
           throw new Error("No se puede cambiar el correo del superadministrador");
@@ -182,7 +190,20 @@ export const userService = {
         }
       }
 
-      await updateDoc(docRef, updates);
+      if (photoFile) {
+        // Delete old photo if exists
+        if (userToUpdate.photoUrl && userToUpdate.photoUrl.includes('firebasestorage.googleapis.com')) {
+          try {
+            const oldPhotoRef = ref(storage!, userToUpdate.photoUrl);
+            await deleteObject(oldPhotoRef);
+          } catch (e) {
+            console.warn("Failed to delete old user photo", e);
+          }
+        }
+        updateData.photoUrl = await userService.uploadPhoto(photoFile);
+      }
+
+      await updateDoc(docRef, updateData);
       
       const updatedDoc = await getDoc(docRef);
       return { id: updatedDoc.id, ...updatedDoc.data() } as User;
@@ -216,6 +237,16 @@ export const userService = {
         if (userToDelete.email === SUPERADMIN_EMAIL) {
           throw new Error("No se puede eliminar el superadministrador principal");
         }
+
+        // Delete photo if exists
+        if (userToDelete.photoUrl && userToDelete.photoUrl.includes('firebasestorage.googleapis.com')) {
+          try {
+            const photoRef = ref(storage!, userToDelete.photoUrl);
+            await deleteObject(photoRef);
+          } catch (e) {
+            console.error("Error deleting user photo", e);
+          }
+        }
       }
       
       await deleteDoc(docRef);
@@ -223,5 +254,80 @@ export const userService = {
       console.error("Error deleting user:", error);
       throw error;
     }
+  },
+
+  async uploadPhoto(file: File): Promise<string> {
+    if (!isConfigured || !storage) {
+      throw new Error("Firebase Storage no está configurado");
+    }
+
+    try {
+      const compressedFile = await userService.compressImage(file);
+      const uniqueFilename = `users/${Date.now()}-${compressedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const storageRef = ref(storage, uniqueFilename);
+      const metadata = {
+        cacheControl: 'public,max-age=31536000',
+        contentType: 'image/jpeg'
+      };
+      
+      await uploadBytes(storageRef, compressedFile, metadata);
+      return await getDownloadURL(storageRef);
+    } catch (error: any) {
+      console.error("Error uploading user photo:", error);
+      throw new Error(`Error al subir la foto: ${error.message || 'Desconocido'}`);
+    }
+  },
+
+  compressImage(file: File): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 400; 
+          const MAX_HEIGHT = 400; 
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const newFile = new File([blob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now(),
+                });
+                resolve(newFile);
+              } else {
+                resolve(file);
+              }
+            },
+            'image/jpeg',
+            0.8
+          );
+        };
+        img.onerror = () => resolve(file);
+      };
+      reader.onerror = () => resolve(file);
+    });
   },
 };

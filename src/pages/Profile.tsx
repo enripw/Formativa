@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { userService } from '../services/userService';
-import { User as UserIcon, Mail, Lock, Save, AlertCircle, CheckCircle } from 'lucide-react';
+import { User as UserIcon, Mail, Lock, Save, AlertCircle, CheckCircle, Camera, Upload } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { ProgressiveImage } from '../components/ProgressiveImage';
 
 export default function Profile() {
   const { user, refreshUser } = useAuth();
@@ -11,13 +12,39 @@ export default function Profile() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       setName(user.name);
       setEmail(user.email);
+      if (user.photoUrl) {
+        setPhotoPreview(user.photoUrl);
+      }
     }
   }, [user]);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      if (file.size > 5 * 1024 * 1024) {
+        setMessage({ type: 'error', text: 'La imagen es demasiado grande. Máximo 5MB.' });
+        return;
+      }
+
+      setPhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,10 +64,11 @@ export default function Profile() {
         updates.email = email;
       }
 
-      await userService.updateUser(user.id, updates);
+      await userService.updateUser(user.id, updates, photoFile || undefined);
       await refreshUser();
       setMessage({ type: 'success', text: 'Perfil actualizado correctamente' });
       setPassword('');
+      setPhotoFile(null);
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message || 'Error al actualizar el perfil' });
     } finally {
@@ -69,12 +97,55 @@ export default function Profile() {
             )}
 
             <div className="flex flex-col items-center gap-4 mb-8">
-              <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
-                <UserIcon className="w-12 h-12" />
+              <div className="relative group">
+                <div className="w-32 h-32 rounded-full bg-emerald-50 border-2 border-emerald-100 flex items-center justify-center overflow-hidden shadow-sm">
+                  {photoPreview ? (
+                    <ProgressiveImage 
+                      src={photoPreview} 
+                      alt={user.name} 
+                      className="w-full h-full object-cover" 
+                    />
+                  ) : (
+                    <UserIcon className="w-16 h-16 text-emerald-300" />
+                  )}
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-full">
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="p-2 bg-white rounded-full text-emerald-600 shadow-lg hover:scale-110 transition-transform"
+                    title="Tomar foto"
+                  >
+                    <Camera className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => galleryInputRef.current?.click()}
+                    className="p-2 bg-white rounded-full text-blue-600 shadow-lg hover:scale-110 transition-transform"
+                    title="Subir foto"
+                  >
+                    <Upload className="w-5 h-5" />
+                  </button>
+                </div>
+                <input
+                  type="file"
+                  ref={cameraInputRef}
+                  onChange={handlePhotoChange}
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                />
+                <input
+                  type="file"
+                  ref={galleryInputRef}
+                  onChange={handlePhotoChange}
+                  accept="image/*"
+                  className="hidden"
+                />
               </div>
               <div className="text-center">
                 <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
-                <p className="text-sm text-gray-500 capitalize">{user.role.replace('_', ' ')}</p>
+                <p className="text-sm text-gray-500 capitalize">{user.role?.replace('_', ' ')}</p>
               </div>
             </div>
 

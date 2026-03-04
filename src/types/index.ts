@@ -24,5 +24,6 @@ export interface User {
   name: string;
   role?: 'admin' | 'team_admin' | 'viewer';
   teamId?: string;
+  photoUrl?: string;
   createdAt?: number;
 }

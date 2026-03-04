@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { playerService } from "../services/playerService";
 import { teamService } from "../services/teamService";
+import { userService } from "../services/userService";
 import { Player, Team } from "../types";
-import { Users, Activity, Eye, Trophy, LayoutGrid } from "lucide-react";
+import { Users, Activity, Eye, Trophy, LayoutGrid, ShieldCheck } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth } from "../contexts/AuthContext";
 import { ProgressiveImage } from "../components/ProgressiveImage";
@@ -11,6 +12,7 @@ import { ProgressiveImage } from "../components/ProgressiveImage";
 export default function Dashboard() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [teamsCount, setTeamsCount] = useState(0);
+  const [usersCount, setUsersCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -18,12 +20,14 @@ export default function Dashboard() {
     async function fetchStats() {
       try {
         const teamIdFilter = user?.role === 'team_admin' ? user?.teamId : undefined;
-        const [playersData, teamsData] = await Promise.all([
+        const [playersData, teamsData, usersData] = await Promise.all([
           playerService.getPlayers(teamIdFilter),
-          teamService.getTeams()
+          teamService.getTeams(),
+          user?.role === 'admin' ? userService.getUsers() : Promise.resolve([])
         ]);
         setPlayers(playersData);
         setTeamsCount(teamsData.length);
+        setUsersCount(usersData.length);
       } catch (error) {
         console.error("Error fetching stats:", error);
       } finally {
@@ -53,15 +57,27 @@ export default function Dashboard() {
         </div>
 
         {user?.role === 'admin' && (
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
-              <LayoutGrid className="w-6 h-6" />
+          <>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                <LayoutGrid className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Total Equipos</p>
+                <p className="text-2xl font-bold text-gray-900">{teamsCount}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Equipos</p>
-              <p className="text-2xl font-bold text-gray-900">{teamsCount}</p>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+              <div className="p-3 bg-purple-50 text-purple-600 rounded-lg">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Usuarios del Sistema</p>
+                <p className="text-2xl font-bold text-gray-900">{usersCount}</p>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">

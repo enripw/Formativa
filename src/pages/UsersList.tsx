@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { userService } from "../services/userService";
 import { teamService } from "../services/teamService";
 import { User, Team } from "../types";
-import { Plus, Edit, Trash2, Mail, Shield, Eye, Users } from "lucide-react";
+import { Plus, Edit, Trash2, Mail, Shield, Eye, Users, User as UserIcon } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth } from "../contexts/AuthContext";
+import { ProgressiveImage } from "../components/ProgressiveImage";
 
 export default function UsersList() {
   const [users, setUsers] = useState<User[]>([]);
@@ -80,7 +81,7 @@ export default function UsersList() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="p-4 font-semibold text-gray-600">Nombre</th>
+                  <th className="p-4 font-semibold text-gray-600">Usuario</th>
                   <th className="p-4 font-semibold text-gray-600">Email</th>
                   <th className="p-4 font-semibold text-gray-600">Rol</th>
                   <th className="p-4 font-semibold text-gray-600 text-right">Acciones</th>
@@ -90,7 +91,20 @@ export default function UsersList() {
                 {users.map((user) => (
                   <tr key={user.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                     <td className="p-4">
-                      <div className="font-medium text-gray-900">{user.name}</div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shadow-sm">
+                          {user.photoUrl ? (
+                            <ProgressiveImage 
+                              src={user.photoUrl} 
+                              alt={user.name} 
+                              className="w-full h-full object-cover" 
+                            />
+                          ) : (
+                            <UserIcon className="w-5 h-5 text-gray-400" />
+                          )}
+                        </div>
+                        <div className="font-medium text-gray-900">{user.name}</div>
+                      </div>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2 text-gray-600">
