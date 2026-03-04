@@ -185,7 +185,7 @@ export const playerService = {
       const storageRef = ref(storage, uniqueFilename);
       const metadata = {
         cacheControl: 'public,max-age=31536000', // 1 año de caché
-        contentType: 'image/jpeg'
+        contentType: compressedFile.type
       };
       
       await uploadBytes(storageRef, compressedFile, metadata);
@@ -203,7 +203,7 @@ export const playerService = {
 
   // Función auxiliar para comprimir imágenes en el cliente
   compressImage(file: File): Promise<File> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = (event) => {
@@ -231,13 +231,21 @@ export const playerService = {
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
+          
+          // Limpiar el canvas con transparencia si es necesario
+          ctx?.clearRect(0, 0, width, height);
           ctx?.drawImage(img, 0, 0, width, height);
+
+          // Determinar el formato de salida para preservar transparencia si es PNG/WebP
+          const outputType = (file.type === 'image/png' || file.type === 'image/webp') 
+            ? file.type 
+            : 'image/jpeg';
 
           canvas.toBlob(
             (blob) => {
               if (blob) {
                 const newFile = new File([blob], file.name, {
-                  type: 'image/jpeg',
+                  type: outputType,
                   lastModified: Date.now(),
                 });
                 resolve(newFile);
@@ -245,8 +253,8 @@ export const playerService = {
                 resolve(file); // Si falla la compresión, devolver el original
               }
             },
-            'image/jpeg',
-            0.75 // Calidad reducida al 75% para mayor agilidad sin perder mucha nitidez
+            outputType,
+            outputType === 'image/jpeg' ? 0.75 : undefined
           );
         };
         img.onerror = () => resolve(file); // Si falla la carga, devolver el original

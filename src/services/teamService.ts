@@ -184,7 +184,7 @@ export const teamService = {
       const storageRef = ref(storage, uniqueFilename);
       const metadata = {
         cacheControl: 'public,max-age=31536000',
-        contentType: 'image/jpeg'
+        contentType: compressedFile.type
       };
       
       await uploadBytes(storageRef, compressedFile, metadata);
@@ -224,26 +224,38 @@ export const teamService = {
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
+          
+          // Limpiar el canvas con transparencia si es necesario
+          ctx?.clearRect(0, 0, width, height);
           ctx?.drawImage(img, 0, 0, width, height);
+
+          // Determinar el formato de salida. 
+          // Si es PNG o WebP, mantenemos el formato para preservar transparencia.
+          // De lo contrario, usamos JPEG para mejor compresión.
+          const outputType = (file.type === 'image/png' || file.type === 'image/webp') 
+            ? file.type 
+            : 'image/jpeg';
 
           canvas.toBlob(
             (blob) => {
               if (blob) {
                 resolve(new File([blob], file.name, {
-                  type: 'image/jpeg',
+                  type: outputType,
                   lastModified: Date.now(),
                 }));
               } else {
                 resolve(file);
               }
             },
-            'image/jpeg',
-            0.8
+            outputType,
+            outputType === 'image/jpeg' ? 0.8 : undefined
           );
         };
         img.onerror = () => resolve(file);
       };
-      reader.onerror = () => resolve(file);
+      reader.onloadend = () => {
+        if (reader.error) resolve(file);
+      };
     });
   },
 };
