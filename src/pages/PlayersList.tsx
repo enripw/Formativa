@@ -15,7 +15,7 @@ import { ProgressiveImage } from "../components/ProgressiveImage";
 
 export default function PlayersList() {
   const [players, setPlayers] = useState<Player[]>([]);
-  const [teams, setTeams] = useState<Record<string, string>>({});
+  const [teams, setTeams] = useState<Record<string, Team>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [playerToDelete, setPlayerToDelete] = useState<Player | null>(null);
@@ -56,9 +56,9 @@ export default function PlayersList() {
   async function fetchTeams() {
     try {
       const data = await teamService.getTeams();
-      const teamMap: Record<string, string> = {};
+      const teamMap: Record<string, Team> = {};
       data.forEach(t => {
-        if (t.id) teamMap[t.id] = t.name;
+        if (t.id) teamMap[t.id] = t;
       });
       setTeams(teamMap);
     } catch (error) {
@@ -166,7 +166,7 @@ export default function PlayersList() {
       p.lastName,
       p.dni,
       formatDate(p.birthDate),
-      teams[p.teamId] || "Sin equipo"
+      teams[p.teamId]?.name || "Sin equipo"
     ]);
 
     const csvContent = [
@@ -247,7 +247,7 @@ export default function PlayersList() {
           p.firstName,
           p.lastName,
           p.dni.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."),
-          teams[p.teamId] || "Sin equipo",
+          teams[p.teamId]?.name || "Sin equipo",
           formatDate(p.birthDate)
         ]),
         columnStyles: {
@@ -382,6 +382,9 @@ export default function PlayersList() {
       setCurrentPlayerForBatch(null);
     }
   };
+
+  const getTeamName = (teamId: string) => teams[teamId]?.name || 'Sin equipo';
+  const getTeamLogo = (teamId: string) => teams[teamId]?.logoUrl;
 
   const filteredPlayers = players.filter(
     (p) => {
@@ -530,8 +533,8 @@ export default function PlayersList() {
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white text-gray-700"
               >
                 <option value="">Todos los equipos</option>
-                {Object.entries(teams).map(([id, name]) => (
-                  <option key={id} value={id}>{name}</option>
+                {(Object.entries(teams) as [string, Team][]).map(([id, team]) => (
+                  <option key={id} value={id}>{team.name}</option>
                 ))}
               </select>
             </div>
@@ -574,8 +577,17 @@ export default function PlayersList() {
                             <p className="text-sm text-gray-500">DNI: {player.dni.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}</p>
                             {isAdmin && (
                               <p className="text-xs text-emerald-600 flex items-center gap-1">
-                                <Users className="w-3 h-3" />
-                                {teams[player.teamId] || 'Sin equipo'}
+                                {getTeamLogo(player.teamId) ? (
+                                  <img 
+                                    src={getTeamLogo(player.teamId)} 
+                                    alt="Logo" 
+                                    className="w-3 h-3 object-contain"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                ) : (
+                                  <Users className="w-3 h-3" />
+                                )}
+                                {getTeamName(player.teamId)}
                               </p>
                             )}
                           </div>
@@ -585,8 +597,19 @@ export default function PlayersList() {
                     {isAdmin && (
                       <td className="p-4 text-gray-600 hidden lg:table-cell">
                         <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-gray-400" />
-                          <span>{teams[player.teamId] || 'Sin equipo'}</span>
+                          <div className="w-6 h-6 rounded bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shrink-0">
+                            {getTeamLogo(player.teamId) ? (
+                              <img 
+                                src={getTeamLogo(player.teamId)} 
+                                alt="Logo" 
+                                className="w-full h-full object-contain p-0.5"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <Users className="w-3 h-3 text-gray-400" />
+                            )}
+                          </div>
+                          <span className="truncate max-w-[150px]">{getTeamName(player.teamId)}</span>
                         </div>
                       </td>
                     )}
@@ -685,7 +708,7 @@ export default function PlayersList() {
             </div>
             
             <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto p-1">
-              {Object.entries(teams).map(([id, name]) => (
+              {(Object.entries(teams) as [string, Team][]).map(([id, team]) => (
                 <button
                   key={id}
                   onClick={() => {
@@ -694,7 +717,21 @@ export default function PlayersList() {
                   }}
                   className="flex items-center justify-between p-3 text-left hover:bg-emerald-50 rounded-lg border border-gray-100 transition-colors group"
                 >
-                  <span className="font-medium text-gray-700 group-hover:text-emerald-700">{name}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100">
+                      {team.logoUrl ? (
+                        <img 
+                          src={team.logoUrl} 
+                          alt={team.name} 
+                          className="w-full h-full object-contain p-1"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <Users className="w-4 h-4 text-gray-400" />
+                      )}
+                    </div>
+                    <span className="font-medium text-gray-700 group-hover:text-emerald-700">{team.name}</span>
+                  </div>
                   <FileDown className="w-4 h-4 text-gray-400 group-hover:text-emerald-500" />
                 </button>
               ))}

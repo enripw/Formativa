@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { teamService } from "../services/teamService";
 import { Team } from "../types";
-import { ArrowLeft, AlertCircle, Shield } from "lucide-react";
+import { ArrowLeft, AlertCircle, Shield, Upload, Camera } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { ProgressiveImage } from "../components/ProgressiveImage";
 
 export default function TeamForm() {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +14,10 @@ export default function TeamForm() {
   const [formData, setFormData] = useState<Omit<Team, "id" | "createdAt">>({
     name: "",
   });
+
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEditing);
@@ -31,6 +36,9 @@ export default function TeamForm() {
         setFormData({
           name: team.name,
         });
+        if (team.logoUrl) {
+          setLogoPreview(team.logoUrl);
+        }
       } else {
         navigate("/equipos");
       }
@@ -47,6 +55,24 @@ export default function TeamForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      if (file.size > 2 * 1024 * 1024) {
+        setError("La imagen es demasiado grande. El tamaño máximo permitido es 2MB.");
+        return;
+      }
+
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -54,9 +80,9 @@ export default function TeamForm() {
 
     try {
       if (isEditing && id) {
-        await teamService.updateTeam(id, formData);
+        await teamService.updateTeam(id, formData, logoFile || undefined);
       } else {
-        await teamService.createTeam(formData);
+        await teamService.createTeam(formData, logoFile || undefined);
       }
       navigate("/equipos");
     } catch (err: any) {
@@ -93,6 +119,49 @@ export default function TeamForm() {
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 md:p-8 space-y-6">
+          {/* Logo Upload Section */}
+          <div className="flex flex-col items-center gap-4 py-4 border-b border-gray-50">
+            <div className="relative w-32 h-32 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden group">
+              {logoPreview ? (
+                <ProgressiveImage 
+                  src={logoPreview} 
+                  alt="Logo Preview" 
+                  className="w-full h-full object-contain p-2" 
+                />
+              ) : (
+                <Shield className="w-12 h-12 text-gray-200" />
+              )}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Camera className="w-8 h-8 text-white" />
+              </button>
+            </div>
+            
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+              >
+                <Upload className="w-4 h-4" />
+                {logoPreview ? "Cambiar Escudo" : "Subir Escudo"}
+              </button>
+              <p className="text-xs text-gray-400 mt-1">
+                JPG, PNG o WebP (Máx. 2MB)
+              </p>
+            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleLogoChange}
+              accept="image/*"
+              className="hidden"
+            />
+          </div>
+
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">

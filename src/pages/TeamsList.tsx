@@ -74,8 +74,17 @@ export default function TeamsList() {
                   <tr key={team.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
-                          <Shield className="w-5 h-5" />
+                        <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center overflow-hidden shrink-0 border border-emerald-100">
+                          {team.logoUrl ? (
+                            <img 
+                              src={team.logoUrl} 
+                              alt={team.name} 
+                              className="w-full h-full object-contain p-1"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <Shield className="w-5 h-5 text-emerald-600" />
+                          )}
                         </div>
                         <div className="font-medium text-gray-900">{team.name}</div>
                       </div>

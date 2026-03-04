@@ -214,9 +214,21 @@ export default function PlayerDetails() {
               <div className="p-2 bg-white rounded-lg shadow-sm text-emerald-600">
                 <Users className="w-5 h-5" />
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Equipo</p>
-                <p className="text-lg font-bold text-gray-800">{team?.name || 'Sin equipo'}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  {team?.logoUrl && (
+                    <div className="w-6 h-6 rounded bg-white flex items-center justify-center overflow-hidden border border-gray-200 shrink-0">
+                      <img 
+                        src={team.logoUrl} 
+                        alt={team.name} 
+                        className="w-full h-full object-contain p-0.5"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  )}
+                  <p className="text-lg font-bold text-gray-800">{team?.name || 'Sin equipo'}</p>
+                </div>
               </div>
             </div>
 
