@@ -66,8 +66,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* User Info & Logout */}
         <div className="p-4 border-t border-gray-200">
           <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">
-              {user?.name?.charAt(0) || "U"}
+            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold overflow-hidden">
+              {user?.photoUrl ? (
+                <img 
+                  src={user.photoUrl} 
+                  alt={user.name} 
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                user?.name?.charAt(0) || "U"
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
