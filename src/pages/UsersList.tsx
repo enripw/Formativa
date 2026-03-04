@@ -82,7 +82,7 @@ export default function UsersList() {
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
                   <th className="p-4 font-semibold text-gray-600">Usuario</th>
-                  <th className="p-4 font-semibold text-gray-600">Email</th>
+                  <th className="p-4 font-semibold text-gray-600 hidden md:table-cell">Email</th>
                   <th className="p-4 font-semibold text-gray-600">Rol</th>
                   <th className="p-4 font-semibold text-gray-600 text-right">Acciones</th>
                 </tr>
@@ -106,7 +106,7 @@ export default function UsersList() {
                         <div className="font-medium text-gray-900">{user.name}</div>
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 hidden md:table-cell">
                       <div className="flex items-center gap-2 text-gray-600">
                         <Mail className="w-4 h-4" />
                         {user.email}
