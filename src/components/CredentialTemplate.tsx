@@ -87,6 +87,7 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
   const { settings } = useSettings();
   const [templateBase64, setTemplateBase64] = useState<string>("");
   const [photoBase64, setPhotoBase64] = useState<string>("");
+  const [dimensions, setDimensions] = useState({ width: 1011, height: 638 });
 
   const onReadyRef = useRef(onReady);
 
@@ -117,15 +118,50 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
 
       if (!isMounted) return;
 
-      if (bg) setTemplateBase64(bg);
+      if (bg) {
+        setTemplateBase64(bg);
+        const img = new Image();
+        img.onload = () => {
+          if (isMounted) {
+            if (img.width && img.height) {
+              // Standard CR-80 width in pixels at ~300dpi is around 1011px
+              // We fix the width to ensure font sizes (rem/px) remain consistent relative to the card
+              const TARGET_WIDTH = 1011;
+              const aspectRatio = img.width / img.height;
+              setDimensions({ 
+                width: TARGET_WIDTH, 
+                height: TARGET_WIDTH / aspectRatio 
+              });
+            }
+            
+            // Trigger ready after dimensions are set and a small render delay
+            setTimeout(() => {
+              if (isMounted && onReadyRef.current) {
+                onReadyRef.current();
+              }
+            }, 500);
+          }
+        };
+        img.onerror = () => {
+          console.error("Error loading background image for dimensions");
+          // Fallback trigger
+          setTimeout(() => {
+            if (isMounted && onReadyRef.current) {
+              onReadyRef.current();
+            }
+          }, 500);
+        };
+        img.src = bg;
+      } else {
+        // Small delay to ensure React has painted
+        setTimeout(() => {
+          if (isMounted && onReadyRef.current) {
+            onReadyRef.current();
+          }
+        }, 1000);
+      }
+      
       setPhotoBase64(photo || "");
-
-      // Small delay to ensure React has painted the base64 images
-      setTimeout(() => {
-        if (isMounted && onReadyRef.current) {
-          onReadyRef.current();
-        }
-      }, 1000);
     };
 
     loadImages();
@@ -133,13 +169,17 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
     return () => {
       isMounted = false;
     };
-  }, [player.photoUrl]);
+  }, [player.photoUrl, settings.credentialBgUrl]);
 
   return (
     <div 
       ref={ref}
-      className="w-[1000px] h-[630px] bg-primary relative overflow-hidden"
-      style={{ fontFamily: "'Inter', sans-serif" }}
+      className="bg-primary relative overflow-hidden"
+      style={{ 
+        width: `${dimensions.width}px`,
+        height: `${dimensions.height}px`,
+        fontFamily: "'Inter', sans-serif" 
+      }}
     >
       {/* Background Template Image */}
       {templateBase64 ? (
@@ -171,25 +211,25 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
 
 
       {/* Data Fields - Positioned over the white boxes in the template */}
-      <div className="absolute top-[64.7%] left-[41.8%] w-[28.8%] h-[5.8%] flex items-center z-20">
+      <div className="absolute top-[64.7%] left-[43.0%] w-[28.8%] h-[5.8%] flex items-center z-20">
         <span className="text-gray-900 font-bold text-2xl uppercase tracking-tight px-2">
           {player.firstName}
         </span>
       </div>
 
-      <div className="absolute top-[72.0%] left-[41.8%] w-[28.8%] h-[5.8%] flex items-center z-20">
+      <div className="absolute top-[72.0%] left-[43.0%] w-[28.8%] h-[5.8%] flex items-center z-20">
         <span className="text-gray-900 font-bold text-2xl uppercase tracking-tight px-2">
           {player.lastName}
         </span>
       </div>
 
-      <div className="absolute top-[79.3%] left-[41.8%] w-[28.8%] h-[5.8%] flex items-center z-20">
+      <div className="absolute top-[79.3%] left-[43.0%] w-[28.8%] h-[5.8%] flex items-center z-20">
         <span className="text-gray-900 font-bold text-2xl uppercase tracking-tight px-2">
           {player.dni.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
         </span>
       </div>
 
-      <div className="absolute top-[86.6%] left-[56.8%] w-[13.8%] h-[5.8%] flex items-center z-20">
+      <div className="absolute top-[86.6%] left-[58.0%] w-[13.8%] h-[5.8%] flex items-center z-20">
         <span className="text-gray-900 font-bold text-xl uppercase tracking-tight px-2">
           {formatDate(player.birthDate)}
         </span>

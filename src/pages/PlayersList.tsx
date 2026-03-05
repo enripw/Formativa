@@ -357,15 +357,35 @@ export default function PlayersList() {
             doc.addPage([90, 50], 'landscape');
           }
 
-          // Calculate dimensions to fit 90x50 while maintaining aspect ratio
-          // Template is 1000x630 (1.587 ratio)
-          // 90x50 is 1.8 ratio
-          // Height 50mm -> Width 50 * 1.587 = 79.35mm
-          const imgWidth = 50 * (1000 / 630);
-          const imgHeight = 50;
-          const xOffset = (90 - imgWidth) / 2;
+          // Get actual dimensions from the rendered element to maintain aspect ratio
+          const element = credentialRef.current;
+          const elementWidth = element.offsetWidth;
+          const elementHeight = element.offsetHeight;
+          const elementRatio = elementWidth / elementHeight;
 
-          doc.addImage(dataUrl, 'JPEG', xOffset, 0, imgWidth, imgHeight);
+          // PDF Page dimensions
+          const pageWidth = 90;
+          const pageHeight = 50;
+          const pageRatio = pageWidth / pageHeight;
+
+          let imgWidth, imgHeight;
+
+          // Calculate dimensions to fit within 90x50mm while maintaining aspect ratio
+          if (elementRatio > pageRatio) {
+            // Image is wider than page (relative to height) -> Fit to width
+            imgWidth = pageWidth;
+            imgHeight = pageWidth / elementRatio;
+          } else {
+            // Image is taller than page (relative to width) -> Fit to height
+            imgHeight = pageHeight;
+            imgWidth = pageHeight * elementRatio;
+          }
+
+          // Center the image
+          const xOffset = (pageWidth - imgWidth) / 2;
+          const yOffset = (pageHeight - imgHeight) / 2;
+
+          doc.addImage(dataUrl, 'JPEG', xOffset, yOffset, imgWidth, imgHeight);
         }
       }
 
