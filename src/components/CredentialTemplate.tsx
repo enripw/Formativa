@@ -193,7 +193,7 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
       )}
 
       {/* Player Photo - Positioned in the circular frame of the image */}
-      <div className="absolute top-[19.8%] left-[50.5%] -translate-x-1/2 w-[26.2%] aspect-square z-10">
+      <div className="absolute top-[19.2%] left-[50.5%] -translate-x-1/2 w-[25.0%] aspect-square z-10">
         <div className="w-full h-full rounded-full overflow-hidden border-4 border-white bg-gray-100 shadow-sm">
           {photoBase64 ? (
             <img 
