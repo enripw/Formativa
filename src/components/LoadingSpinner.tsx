@@ -10,7 +10,7 @@ export default function LoadingSpinner({ message = "Cargando...", fullPage = fal
     <div className="flex flex-col items-center justify-center space-y-4 p-8">
       <div className="relative">
         {/* Outer glow */}
-        <div className="absolute inset-0 bg-emerald-400/20 blur-xl rounded-full animate-pulse"></div>
+        <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse"></div>
         
         {/* Animated Soccer Ball */}
         <div className="relative animate-bounce">
@@ -24,7 +24,7 @@ export default function LoadingSpinner({ message = "Cargando...", fullPage = fal
       </div>
       
       {message && (
-        <p className="text-emerald-700 font-medium animate-pulse tracking-wide">
+        <p className="text-primary font-medium animate-pulse tracking-wide">
           {message}
         </p>
       )}

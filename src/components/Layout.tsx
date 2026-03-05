@@ -1,13 +1,15 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Shield, LogOut, Trophy, User } from "lucide-react";
+import { LayoutDashboard, Users, Shield, LogOut, Trophy, User, Settings as SettingsIcon } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
+import { useSettings } from "../contexts/SettingsContext";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const { settings } = useSettings();
 
   const handleLogout = () => {
     logout();
@@ -17,11 +19,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
 
   const navItems = [
-    { name: "Panel de Control", href: "/", icon: LayoutDashboard },
+    { name: "P. Control", href: "/", icon: LayoutDashboard },
     { name: "Jugadores", href: "/jugadores", icon: Users },
     ...(isSuperAdmin ? [
       { name: "Equipos", href: "/equipos", icon: Trophy },
-      { name: "Usuarios", href: "/usuarios", icon: Shield }
+      { name: "Usuarios", href: "/usuarios", icon: Shield },
+      { name: "Conf.", href: "/configuracion", icon: SettingsIcon }
     ] : []),
     { name: "Mi Perfil", href: "/perfil", icon: User },
   ];
@@ -32,7 +35,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
         <div className="p-6 flex items-center gap-3">
           <img 
-            src="https://firebasestorage.googleapis.com/v0/b/ligaformativa-3db31.firebasestorage.app/o/players%2Flogo.png?alt=media" 
+            src={settings.logoUrl || "https://firebasestorage.googleapis.com/v0/b/ligaformativa-3db31.firebasestorage.app/o/players%2Flogo.png?alt=media"} 
             alt="Logo" 
             className="w-10 h-10 object-contain"
             onError={(e) => {
@@ -40,7 +43,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               target.style.display = 'none';
             }}
           />
-          <h1 className="text-xl font-bold text-gray-900 leading-tight">Liga<br/>Formativa</h1>
+          <h1 className="text-xl font-bold text-gray-900 leading-tight">
+            {settings.appName}
+          </h1>
         </div>
         <nav className="flex-1 px-4 space-y-2">
           {navItems.map((item) => {
@@ -52,7 +57,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-emerald-50 text-emerald-600"
+                    ? "bg-[var(--primary-color)]/10 text-[var(--primary-color)]"
                     : "text-gray-600 hover:bg-gray-100"
                 )}
               >
@@ -66,7 +71,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* User Info & Logout */}
         <div className="p-4 border-t border-gray-200">
           <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold overflow-hidden">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
               {user?.photoUrl ? (
                 <img 
                   src={user.photoUrl} 
@@ -110,7 +115,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               to={item.href}
               className={cn(
                 "flex flex-col items-center gap-1 text-xs font-medium transition-colors",
-                isActive ? "text-emerald-600" : "text-gray-500"
+                isActive ? "text-[var(--primary-color)]" : "text-gray-500"
               )}
             >
               <item.icon className="w-6 h-6" />

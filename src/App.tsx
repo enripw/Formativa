@@ -15,14 +15,17 @@ import UserForm from "./pages/UserForm";
 import TeamsList from "./pages/TeamsList";
 import TeamForm from "./pages/TeamForm";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import { AuthProvider } from "./contexts/AuthContext";
+import { SettingsProvider } from "./contexts/SettingsContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { isConfigured } from "./lib/firebase";
 
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
+      <SettingsProvider>
+        <Router>
         {!isConfigured && (
           <div className="bg-amber-50 border-b border-amber-200 p-4 text-amber-800 text-sm text-center">
             <strong>Aviso:</strong> Firebase no está configurado. La aplicación no podrá guardar ni cargar datos reales.
@@ -83,6 +86,12 @@ export default function App() {
                         <TeamForm />
                       </ProtectedRoute>
                     } />
+
+                    <Route path="/configuracion" element={
+                      <ProtectedRoute requireSuperAdmin>
+                        <Settings />
+                      </ProtectedRoute>
+                    } />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
@@ -90,6 +99,7 @@ export default function App() {
           />
         </Routes>
       </Router>
+      </SettingsProvider>
     </AuthProvider>
   );
 }

@@ -100,7 +100,7 @@ export default function PlayerDetails() {
         <p className="text-gray-500">No se encontró el jugador.</p>
         <button
           onClick={() => navigate("/jugadores")}
-          className="text-emerald-600 font-medium hover:underline"
+          className="text-primary font-medium hover:underline"
         >
           Volver a la lista
         </button>
@@ -142,9 +142,9 @@ export default function PlayerDetails() {
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50"
           >
             {isGenerating ? (
-              <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             ) : (
-              <Download className="w-5 h-5 text-emerald-600" />
+              <Download className="w-5 h-5 text-primary" />
             )}
             <span className="hidden sm:inline">Descargar Credencial</span>
           </button>
@@ -153,7 +153,7 @@ export default function PlayerDetails() {
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {/* Header/Cover */}
-        <div className="h-32 bg-gradient-to-r from-emerald-600 to-green-800"></div>
+        <div className="h-32 bg-gradient-to-r from-primary to-primary/80"></div>
         
         <div className="px-6 pb-8">
           <div className="relative -mt-16 mb-6 flex justify-center">
@@ -175,7 +175,7 @@ export default function PlayerDetails() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-              <div className="p-2 bg-white rounded-lg shadow-sm text-emerald-600">
+              <div className="p-2 bg-white rounded-lg shadow-sm text-primary">
                 <CreditCard className="w-5 h-5" />
               </div>
               <div>
@@ -187,7 +187,7 @@ export default function PlayerDetails() {
             </div>
 
             <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-              <div className="p-2 bg-white rounded-lg shadow-sm text-emerald-600">
+              <div className="p-2 bg-white rounded-lg shadow-sm text-primary">
                 <Calendar className="w-5 h-5" />
               </div>
               <div>
@@ -199,7 +199,7 @@ export default function PlayerDetails() {
             </div>
 
             <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-              <div className="p-2 bg-white rounded-lg shadow-sm text-emerald-600">
+              <div className="p-2 bg-white rounded-lg shadow-sm text-primary">
                 <Cake className="w-5 h-5" />
               </div>
               <div>
@@ -211,7 +211,7 @@ export default function PlayerDetails() {
             </div>
 
             <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-              <div className="p-2 bg-white rounded-lg shadow-sm text-emerald-600">
+              <div className="p-2 bg-white rounded-lg shadow-sm text-primary">
                 <Users className="w-5 h-5" />
               </div>
               <div className="flex-1">
@@ -233,7 +233,7 @@ export default function PlayerDetails() {
             </div>
 
             <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-              <div className="p-2 bg-white rounded-lg shadow-sm text-emerald-600">
+              <div className="p-2 bg-white rounded-lg shadow-sm text-primary">
                 <Trophy className="w-5 h-5" />
               </div>
               <div>
@@ -243,7 +243,7 @@ export default function PlayerDetails() {
             </div>
 
             <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
-              <div className="p-2 bg-white rounded-lg shadow-sm text-emerald-600">
+              <div className="p-2 bg-white rounded-lg shadow-sm text-primary">
                 <IdCard className="w-5 h-5" />
               </div>
               <div>
@@ -273,7 +273,7 @@ export default function PlayerDetails() {
         <div className="flex justify-center">
           <button
             onClick={() => navigate(`/jugadores/editar/${player.id}`)}
-            className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all hover:bg-emerald-700 transition-colors flex-1 sm:flex-none"
+            className="px-8 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-all flex-1 sm:flex-none"
           >
             Editar Información
           </button>

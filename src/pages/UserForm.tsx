@@ -124,7 +124,7 @@ export default function UserForm() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate("/usuarios")}
-          className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"
+          className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
@@ -162,7 +162,7 @@ export default function UserForm() {
                 onClick={() => cameraInputRef.current?.click()}
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
               >
-                <Camera className="w-4 h-4 text-emerald-600" />
+                <Camera className="w-4 h-4 text-primary" />
                 Cámara
               </button>
               <button
@@ -207,7 +207,7 @@ export default function UserForm() {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all"
+                  className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all"
                   placeholder="Ej. Juan Pérez"
                 />
               </div>
@@ -229,7 +229,7 @@ export default function UserForm() {
                   value={formData.email}
                   onChange={handleChange}
                   disabled={isSuperAdmin}
-                  className={`focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all ${isSuperAdmin ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                  className={`focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all ${isSuperAdmin ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                   placeholder="ejemplo@correo.com"
                 />
               </div>
@@ -250,7 +250,7 @@ export default function UserForm() {
                   required={!isEditing}
                   value={formData.password}
                   onChange={handleChange}
-                  className="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all"
+                  className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all"
                   placeholder={isEditing ? "Dejar en blanco para mantener la actual" : "••••••••"}
                 />
               </div>
@@ -276,7 +276,7 @@ export default function UserForm() {
                   value={formData.role}
                   onChange={handleChange}
                   disabled={isSuperAdmin}
-                  className={`focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all appearance-none ${isSuperAdmin ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
+                  className={`focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all appearance-none ${isSuperAdmin ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
                 >
                   <option value="admin">Administrador (Acceso Total)</option>
                   <option value="team_admin">Administrador de Equipo</option>
@@ -300,7 +300,7 @@ export default function UserForm() {
                     required={formData.role === 'team_admin'}
                     value={formData.teamId}
                     onChange={handleChange}
-                    className="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all appearance-none bg-white"
+                    className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all appearance-none bg-white"
                   >
                     <option value="">Seleccionar un equipo...</option>
                     {teams.map((team) => (
@@ -314,18 +314,18 @@ export default function UserForm() {
             )}
             
             <div className={`rounded-lg p-4 flex items-start gap-3 border ${
-              formData.role === 'admin' ? 'bg-emerald-50 border-emerald-100' : 
+              formData.role === 'admin' ? 'bg-primary/10 border-primary/20' : 
               formData.role === 'team_admin' ? 'bg-amber-50 border-amber-100' :
               'bg-blue-50 border-blue-100'
             }`}>
               <Shield className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                formData.role === 'admin' ? 'text-emerald-600' : 
+                formData.role === 'admin' ? 'text-primary' : 
                 formData.role === 'team_admin' ? 'text-amber-600' :
                 'text-blue-600'
               }`} />
               <div>
                 <h4 className={`text-sm font-medium ${
-                  formData.role === 'admin' ? 'text-emerald-800' : 
+                  formData.role === 'admin' ? 'text-primary' : 
                   formData.role === 'team_admin' ? 'text-amber-800' :
                   'text-blue-800'
                 }`}>
@@ -334,7 +334,7 @@ export default function UserForm() {
                    'Permisos de Visualizador'}
                 </h4>
                 <p className={`text-xs mt-1 ${
-                  formData.role === 'admin' ? 'text-emerald-600' : 
+                  formData.role === 'admin' ? 'text-primary/80' : 
                   formData.role === 'team_admin' ? 'text-amber-600' :
                   'text-blue-600'
                 }`}>
@@ -360,7 +360,7 @@ export default function UserForm() {
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
             {loading ? (
               <>

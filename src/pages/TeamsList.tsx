@@ -47,7 +47,7 @@ export default function TeamsList() {
         <h1 className="text-2xl font-bold text-gray-900">Gestión de Equipos</h1>
         <Link
           to="/equipos/nuevo"
-          className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
         >
           <Plus className="w-5 h-5" />
           <span>Nuevo Equipo</span>
@@ -74,7 +74,7 @@ export default function TeamsList() {
                   <tr key={team.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center overflow-hidden shrink-0 border border-emerald-100">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden shrink-0 border border-primary/20">
                           {team.logoUrl ? (
                             <img 
                               src={team.logoUrl} 
@@ -83,7 +83,7 @@ export default function TeamsList() {
                               referrerPolicy="no-referrer"
                             />
                           ) : (
-                            <Shield className="w-5 h-5 text-emerald-600" />
+                            <Shield className="w-5 h-5 text-primary" />
                           )}
                         </div>
                         <div className="font-medium text-gray-900">{team.name}</div>
@@ -96,7 +96,7 @@ export default function TeamsList() {
                       <div className="flex items-center justify-end gap-2">
                         <Link
                           to={`/equipos/editar/${team.id}`}
-                          className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                           title="Editar"
                         >
                           <Edit className="w-5 h-5" />

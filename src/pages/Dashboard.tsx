@@ -47,7 +47,7 @@ export default function Dashboard() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+          <div className="p-3 bg-primary/10 text-primary rounded-lg">
             <Users className="w-6 h-6" />
           </div>
           <div>
@@ -115,7 +115,7 @@ export default function Dashboard() {
               </div>
               <Link
                 to={`/jugadores/ver/${player.id}`}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
               >
                 <Eye className="w-4 h-4" />
                 <span className="hidden sm:inline">Ver Ficha</span>

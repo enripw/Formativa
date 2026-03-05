@@ -101,7 +101,7 @@ export default function TeamForm() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate("/equipos")}
-          className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"
+          className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
@@ -144,7 +144,7 @@ export default function TeamForm() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
               >
                 <Upload className="w-4 h-4" />
                 {logoPreview ? "Cambiar Escudo" : "Subir Escudo"}
@@ -178,7 +178,7 @@ export default function TeamForm() {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all"
+                  className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border outline-none transition-all"
                   placeholder="Ej. Club Atlético"
                 />
               </div>
@@ -197,7 +197,7 @@ export default function TeamForm() {
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
             {loading ? "Guardando..." : "Guardar Equipo"}
           </button>

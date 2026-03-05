@@ -2,6 +2,7 @@ import React, { forwardRef, useEffect, useState, useRef } from 'react';
 import { Player } from '../types';
 import { User } from 'lucide-react';
 import { formatDate } from '../lib/dateUtils';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface CredentialTemplateProps {
   player: Player;
@@ -83,6 +84,7 @@ const getBase64ImageFromURL = async (url: string): Promise<string> => {
 };
 
 const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>(({ player, onReady }, ref) => {
+  const { settings } = useSettings();
   const [templateBase64, setTemplateBase64] = useState<string>("");
   const [photoBase64, setPhotoBase64] = useState<string>("");
 
@@ -96,7 +98,9 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
     let isMounted = true;
 
     const loadImages = async () => {
-      const bgPromise = getBase64ImageFromURL(`https://firebasestorage.googleapis.com/v0/b/ligaformativa-3db31.firebasestorage.app/o/players%2Fcredencial.jpg?alt=media&v=${CACHE_BUSTER}`)
+      const bgUrl = settings.credentialBgUrl || `https://firebasestorage.googleapis.com/v0/b/ligaformativa-3db31.firebasestorage.app/o/players%2Fcredencial.jpg?alt=media&v=${CACHE_BUSTER}`;
+      
+      const bgPromise = getBase64ImageFromURL(bgUrl)
         .catch((e) => {
           console.error("Error loading template background", e);
           return "";
@@ -134,7 +138,7 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
   return (
     <div 
       ref={ref}
-      className="w-[1000px] h-[630px] bg-emerald-900 relative overflow-hidden"
+      className="w-[1000px] h-[630px] bg-primary relative overflow-hidden"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
       {/* Background Template Image */}
@@ -145,7 +149,7 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
           alt="Template"
         />
       ) : (
-        <div className="absolute inset-0 w-full h-full bg-emerald-800" />
+        <div className="absolute inset-0 w-full h-full bg-primary" />
       )}
 
       {/* Player Photo - Positioned in the circular frame of the image */}

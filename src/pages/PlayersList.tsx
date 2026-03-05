@@ -411,7 +411,7 @@ export default function PlayersList() {
                 onClick={() => setShowDownloadMenu(!showDownloadMenu)}
                 className="inline-flex items-center justify-center gap-2 w-full px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
               >
-                <FileDown className="w-5 h-5 text-emerald-600" />
+                <FileDown className="w-5 h-5 text-primary" />
                 <span className="hidden xs:inline">Exportar</span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${showDownloadMenu ? 'rotate-180' : ''}`} />
               </button>
@@ -424,10 +424,10 @@ export default function PlayersList() {
                       setShowDownloadMenu(false);
                     }}
                     disabled={isExporting || players.length === 0}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors disabled:opacity-50"
                   >
                     {isExporting ? (
-                      <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <FileText className="w-4 h-4" />
                     )}
@@ -440,7 +440,7 @@ export default function PlayersList() {
                       setShowDownloadMenu(false);
                     }}
                     disabled={players.length === 0}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors disabled:opacity-50"
                   >
                     <Table className="w-4 h-4" />
                     Descargar CSV
@@ -454,11 +454,11 @@ export default function PlayersList() {
                       setShowDownloadMenu(false);
                     }}
                     disabled={isExportingCredentials || players.length === 0}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors disabled:opacity-50"
                   >
                     {isExportingCredentials ? (
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                       </div>
                     ) : (
                       <CreditCard className="w-4 h-4" />
@@ -473,7 +473,7 @@ export default function PlayersList() {
                         setShowDownloadMenu(false);
                       }}
                       disabled={isExportingCredentials || Object.keys(teams).length === 0}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-50"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors disabled:opacity-50"
                     >
                       <Users className="w-4 h-4" />
                       Credenciales por Equipo
@@ -487,7 +487,7 @@ export default function PlayersList() {
           {canManagePlayers && (
             <Link
               to="/jugadores/nuevo"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors flex-1 sm:flex-none whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors flex-1 sm:flex-none whitespace-nowrap"
             >
               <Plus className="w-5 h-5" />
               Nuevo
@@ -522,7 +522,7 @@ export default function PlayersList() {
               placeholder="Buscar por nombre, apellido o DNI..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
           {isAdmin && (
@@ -530,7 +530,7 @@ export default function PlayersList() {
               <select
                 value={teamFilter}
                 onChange={(e) => setTeamFilter(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white text-gray-700"
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-700"
               >
                 <option value="">Todos los equipos</option>
                 {(Object.entries(teams) as [string, Team][]).map(([id, team]) => (
@@ -576,7 +576,7 @@ export default function PlayersList() {
                           <div className="flex flex-col sm:hidden">
                             <p className="text-sm text-gray-500">DNI: {player.dni.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}</p>
                             {isAdmin && (
-                              <p className="text-xs text-emerald-600 flex items-center gap-1">
+                              <p className="text-xs text-primary flex items-center gap-1">
                                 {getTeamLogo(player.teamId) ? (
                                   <img 
                                     src={getTeamLogo(player.teamId)} 
@@ -623,7 +623,7 @@ export default function PlayersList() {
                       <div className="flex items-center justify-end gap-2">
                         <Link
                           to={`/jugadores/ver/${player.id}`}
-                          className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                           title="Ver Carnet"
                         >
                           <Eye className="w-5 h-5" />
@@ -632,7 +632,7 @@ export default function PlayersList() {
                           <>
                             <Link
                               to={`/jugadores/editar/${player.id}`}
-                              className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                              className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                               title="Editar"
                             >
                               <Edit className="w-5 h-5" />
@@ -698,7 +698,7 @@ export default function PlayersList() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-6 animate-in fade-in zoom-in duration-200">
             <div className="text-center space-y-2">
-              <div className="mx-auto w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">
+              <div className="mx-auto w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
                 <CreditCard className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-gray-900">Generar Credenciales por Equipo</h3>
@@ -715,7 +715,7 @@ export default function PlayersList() {
                     generateBatchCredentialsPDF(id);
                     setShowTeamSelectModal(false);
                   }}
-                  className="flex items-center justify-between p-3 text-left hover:bg-emerald-50 rounded-lg border border-gray-100 transition-colors group"
+                  className="flex items-center justify-between p-3 text-left hover:bg-primary/10 rounded-lg border border-gray-100 transition-colors group"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100">
@@ -730,9 +730,9 @@ export default function PlayersList() {
                         <Users className="w-4 h-4 text-gray-400" />
                       )}
                     </div>
-                    <span className="font-medium text-gray-700 group-hover:text-emerald-700">{team.name}</span>
+                    <span className="font-medium text-gray-700 group-hover:text-primary">{team.name}</span>
                   </div>
-                  <FileDown className="w-4 h-4 text-gray-400 group-hover:text-emerald-500" />
+                  <FileDown className="w-4 h-4 text-gray-400 group-hover:text-primary" />
                 </button>
               ))}
             </div>
@@ -754,9 +754,9 @@ export default function PlayersList() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center space-y-6 animate-in fade-in zoom-in duration-300">
             <div className="relative mx-auto w-24 h-24">
-              <div className="absolute inset-0 border-4 border-emerald-100 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-primary/10 rounded-full"></div>
               <div 
-                className="absolute inset-0 border-4 border-emerald-500 rounded-full border-t-transparent animate-spin"
+                className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"
                 style={{ animationDuration: '1.5s' }}
               ></div>
               <div className="absolute inset-0 flex items-center justify-center text-2xl">
@@ -773,13 +773,13 @@ export default function PlayersList() {
 
             <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
               <div 
-                className="bg-emerald-500 h-full transition-all duration-500 ease-out"
+                className="bg-primary h-full transition-all duration-500 ease-out"
                 style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
               ></div>
             </div>
 
             {currentPlayerForBatch && (
-              <p className="text-xs text-emerald-600 font-medium animate-pulse">
+              <p className="text-xs text-primary font-medium animate-pulse">
                 {currentPlayerForBatch.firstName} {currentPlayerForBatch.lastName}
               </p>
             )}

@@ -28,3 +28,14 @@ export interface User {
   photoUrl?: string;
   createdAt?: number;
 }
+
+export interface AppSettings {
+  id?: string;
+  appName: string;
+  logoUrl?: string;
+  credentialBgUrl?: string;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  updatedAt?: number;
+}

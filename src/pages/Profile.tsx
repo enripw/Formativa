@@ -89,7 +89,7 @@ export default function Profile() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {message && (
               <div className={`p-4 rounded-xl flex items-start gap-3 ${
-                message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'
+                message.type === 'success' ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-red-50 text-red-700 border border-red-100'
               }`}>
                 {message.type === 'success' ? <CheckCircle className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
                 <p className="text-sm font-medium">{message.text}</p>
@@ -98,7 +98,7 @@ export default function Profile() {
 
             <div className="flex flex-col items-center gap-4 mb-8">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full bg-emerald-50 border-2 border-emerald-100 flex items-center justify-center overflow-hidden shadow-sm">
+                <div className="w-32 h-32 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center overflow-hidden shadow-sm">
                   {photoPreview ? (
                     <ProgressiveImage 
                       src={photoPreview} 
@@ -106,14 +106,14 @@ export default function Profile() {
                       className="w-full h-full object-cover" 
                     />
                   ) : (
-                    <UserIcon className="w-16 h-16 text-emerald-300" />
+                    <UserIcon className="w-16 h-16 text-primary/30" />
                   )}
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-full">
                   <button
                     type="button"
                     onClick={() => cameraInputRef.current?.click()}
-                    className="p-2 bg-white rounded-full text-emerald-600 shadow-lg hover:scale-110 transition-transform"
+                    className="p-2 bg-white rounded-full text-primary shadow-lg hover:scale-110 transition-transform"
                     title="Tomar foto"
                   >
                     <Camera className="w-5 h-5" />
@@ -159,7 +159,7 @@ export default function Profile() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   />
                 </div>
               </div>
@@ -174,7 +174,7 @@ export default function Profile() {
                     disabled={isSuperAdmin}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all ${
+                    className={`w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all ${
                       isSuperAdmin ? 'bg-gray-50 cursor-not-allowed text-gray-500' : ''
                     }`}
                   />
@@ -193,7 +193,7 @@ export default function Profile() {
                     placeholder="Dejar en blanco para mantener la actual"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   />
                 </div>
               </div>
@@ -203,7 +203,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-all"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

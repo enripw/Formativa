@@ -64,7 +64,7 @@ export default function UsersList() {
         <h1 className="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
         <Link
           to="/usuarios/nuevo"
-          className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
         >
           <Plus className="w-5 h-5" />
           <span>Nuevo Usuario</span>
@@ -114,7 +114,7 @@ export default function UsersList() {
                     </td>
                     <td className="p-4">
                       {user.role === 'admin' || !user.role ? (
-                        <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full w-fit text-sm font-medium">
+                        <div className="flex items-center gap-1.5 text-primary bg-primary/10 px-2.5 py-1 rounded-full w-fit text-sm font-medium">
                           <Shield className="w-4 h-4" />
                           Administrador
                         </div>
@@ -141,7 +141,7 @@ export default function UsersList() {
                       <div className="flex items-center justify-end gap-2">
                         <Link
                           to={`/usuarios/editar/${user.id}`}
-                          className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                           title="Editar"
                         >
                           <Edit className="w-5 h-5" />
