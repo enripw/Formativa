@@ -56,33 +56,33 @@ export default function App() {
                     <Route path="/jugadores/ver/:id" element={<PlayerDetails />} />
                     
                     <Route path="/usuarios" element={
-                      <ProtectedRoute requireSuperAdmin>
+                      <ProtectedRoute requireGlobalAdmin>
                         <UsersList />
                       </ProtectedRoute>
                     } />
                     <Route path="/usuarios/nuevo" element={
-                      <ProtectedRoute requireSuperAdmin>
+                      <ProtectedRoute requireGlobalAdmin>
                         <UserForm />
                       </ProtectedRoute>
                     } />
                     <Route path="/usuarios/editar/:id" element={
-                      <ProtectedRoute requireSuperAdmin>
+                      <ProtectedRoute requireGlobalAdmin>
                         <UserForm />
                       </ProtectedRoute>
                     } />
 
                     <Route path="/equipos" element={
-                      <ProtectedRoute requireSuperAdmin>
+                      <ProtectedRoute requireGlobalAdmin>
                         <TeamsList />
                       </ProtectedRoute>
                     } />
                     <Route path="/equipos/nuevo" element={
-                      <ProtectedRoute requireSuperAdmin>
+                      <ProtectedRoute requireGlobalAdmin>
                         <TeamForm />
                       </ProtectedRoute>
                     } />
                     <Route path="/equipos/editar/:id" element={
-                      <ProtectedRoute requireSuperAdmin>
+                      <ProtectedRoute requireGlobalAdmin>
                         <TeamForm />
                       </ProtectedRoute>
                     } />

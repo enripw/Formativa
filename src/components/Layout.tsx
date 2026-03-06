@@ -17,13 +17,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   };
 
   const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
+  const isGlobalAdmin = user?.role === 'admin';
 
   const navItems = [
     { name: "P. Control", href: "/", icon: LayoutDashboard },
     { name: "Jugadores", href: "/jugadores", icon: Users },
-    ...(isSuperAdmin ? [
+    ...(isGlobalAdmin ? [
       { name: "Equipos", href: "/equipos", icon: Trophy },
       { name: "Usuarios", href: "/usuarios", icon: Shield },
+    ] : []),
+    ...(isSuperAdmin ? [
       { name: "Conf.", href: "/configuracion", icon: SettingsIcon }
     ] : []),
     { name: "Mi Perfil", href: "/perfil", icon: User },

@@ -32,8 +32,8 @@ export default function PlayersList() {
   const credentialRef = useRef<HTMLDivElement>(null);
   const downloadMenuRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const isGlobalAdmin = user?.role === 'admin';
   const isAdmin = user?.role === 'admin';
-  const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
   const isTeamAdmin = user?.role === 'team_admin';
   const canManagePlayers = isAdmin || isTeamAdmin;
 
@@ -425,7 +425,7 @@ export default function PlayersList() {
         <h1 className="text-2xl font-bold text-gray-900">Jugadores</h1>
         <div className="flex gap-2 w-full sm:w-auto items-center">
           {/* Dropdown for Downloads */}
-          {isSuperAdmin && (
+          {isGlobalAdmin && (
             <div className="relative flex-1 sm:flex-none" ref={downloadMenuRef}>
               <button
                 onClick={() => setShowDownloadMenu(!showDownloadMenu)}

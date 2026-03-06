@@ -23,7 +23,7 @@ export default function PlayerDetails() {
   const onReadyResolveRef = useRef<(() => void) | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   
-  const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
+  const isGlobalAdmin = user?.role === 'admin';
   const isTeamAdmin = user?.role === 'team_admin';
   const isAdmin = user?.role === 'admin';
 
@@ -135,7 +135,7 @@ export default function PlayerDetails() {
           <h1 className="text-2xl font-bold text-gray-900">Carnet del Jugador</h1>
         </div>
         
-        {isSuperAdmin && (
+        {isGlobalAdmin && (
           <button
             onClick={generateCredential}
             disabled={isGenerating}

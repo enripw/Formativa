@@ -6,11 +6,13 @@ import LoadingSpinner from './LoadingSpinner';
 export default function ProtectedRoute({ 
   children, 
   requireAdmin = false,
-  requireSuperAdmin = false
+  requireSuperAdmin = false,
+  requireGlobalAdmin = false
 }: { 
   children: React.ReactNode;
   requireAdmin?: boolean;
   requireSuperAdmin?: boolean;
+  requireGlobalAdmin?: boolean;
 }) {
   const { user, loading } = useAuth();
   const location = useLocation();
@@ -25,9 +27,14 @@ export default function ProtectedRoute({
 
   // Superadmin is enripw@gmail.com and role 'admin'
   const isSuperAdmin = user.role === 'admin' && user.email === 'enripw@gmail.com';
+  const isGlobalAdmin = user.role === 'admin';
   const isAdmin = user.role === 'admin' || user.role === 'team_admin';
 
   if (requireSuperAdmin && !isSuperAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requireGlobalAdmin && !isGlobalAdmin) {
     return <Navigate to="/" replace />;
   }
 
