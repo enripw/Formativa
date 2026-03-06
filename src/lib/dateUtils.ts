@@ -5,12 +5,12 @@ export function formatDate(dateString: string): string {
   // that happen when parsing "YYYY-MM-DD" directly with new Date()
   const [year, month, day] = dateString.split('-');
   if (year && month && day) {
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    return date.toLocaleDateString();
+    return `${parseInt(day, 10)}/${parseInt(month, 10)}/${year}`;
   }
   
   // Fallback
-  return new Date(dateString).toLocaleDateString();
+  const d = new Date(dateString);
+  return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
 }
 
 export function calculateAge(dateString: string): string {
