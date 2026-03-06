@@ -209,7 +209,7 @@ export default function Settings() {
             </div>
             
             <div className="flex flex-col items-center gap-4">
-              <div className="w-full aspect-[3/2] bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+              <div className="w-48 aspect-[5/9] bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
                 {bgPreview ? (
                   <ProgressiveImage 
                     src={bgPreview} 
@@ -236,7 +236,7 @@ export default function Settings() {
                 className="hidden"
               />
               <p className="text-xs text-gray-500 text-center">
-                Dimensiones recomendadas: 1011 x 638 px (CR-80).
+                Proporción recomendada: 5x9 (ej. 500x900 px, formato vertical).
               </p>
             </div>
           </div>

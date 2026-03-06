@@ -178,7 +178,7 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
       style={{ 
         width: `${dimensions.width}px`,
         height: `${dimensions.height}px`,
-        fontFamily: "'Inter', sans-serif" 
+        fontFamily: "'Gadugi', sans-serif" 
       }}
     >
       {/* Background Template Image */}
@@ -193,8 +193,8 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
       )}
 
       {/* Player Photo - Positioned in the circular frame of the image */}
-      <div className="absolute top-[19.2%] left-[50.5%] -translate-x-1/2 w-[25.0%] aspect-square z-10">
-        <div className="w-full h-full rounded-full overflow-hidden border-4 border-white bg-gray-100 shadow-sm">
+      <div className="absolute top-[8.4%] left-[50%] -translate-x-1/2 w-[45.6%] aspect-square z-10">
+        <div className="w-full h-full rounded-full overflow-hidden border-[6px] border-white bg-gray-100 shadow-md">
           {photoBase64 ? (
             <img 
               src={photoBase64} 
@@ -203,34 +203,48 @@ const CredentialTemplate = forwardRef<HTMLDivElement, CredentialTemplateProps>((
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-300">
-              <User className="w-32 h-32" />
+              <User className="w-1/2 h-1/2" />
             </div>
           )}
         </div>
       </div>
 
-
-      {/* Data Fields - Positioned over the white boxes in the template */}
-      <div className="absolute top-[64.7%] left-[43.0%] w-[28.8%] h-[5.8%] flex items-center z-20">
-        <span className="text-gray-900 font-bold text-2xl uppercase tracking-tight px-2">
+      {/* First Name */}
+      <div className="absolute top-[35.1%] left-0 w-full flex justify-center z-20">
+        <span 
+          className="font-bold uppercase tracking-tight"
+          style={{ color: '#C9AF42', fontSize: `${dimensions.width * 0.075}px`, lineHeight: 1 }}
+        >
           {player.firstName}
         </span>
       </div>
 
-      <div className="absolute top-[72.0%] left-[43.0%] w-[28.8%] h-[5.8%] flex items-center z-20">
-        <span className="text-gray-900 font-bold text-2xl uppercase tracking-tight px-2">
+      {/* Last Name */}
+      <div className="absolute top-[40.0%] left-0 w-full flex justify-center z-20">
+        <span 
+          className="font-bold uppercase tracking-tight"
+          style={{ color: '#244423', fontSize: `${dimensions.width * 0.08}px`, lineHeight: 1 }}
+        >
           {player.lastName}
         </span>
       </div>
 
-      <div className="absolute top-[79.3%] left-[43.0%] w-[28.8%] h-[5.8%] flex items-center z-20">
-        <span className="text-gray-900 font-bold text-2xl uppercase tracking-tight px-2">
+      {/* DNI */}
+      <div className="absolute top-[49.4%] left-0 w-full flex justify-center z-20">
+        <span 
+          className="font-bold uppercase tracking-tight"
+          style={{ color: '#244423', fontSize: `${dimensions.width * 0.065}px`, lineHeight: 1 }}
+        >
           {player.dni.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
         </span>
       </div>
 
-      <div className="absolute top-[86.6%] left-[58.0%] w-[13.8%] h-[5.8%] flex items-center z-20">
-        <span className="text-gray-900 font-bold text-xl uppercase tracking-tight px-2">
+      {/* Date of Birth */}
+      <div className="absolute top-[53.8%] left-0 w-full flex justify-center z-20">
+        <span 
+          className="font-bold uppercase tracking-tight"
+          style={{ color: '#244423', fontSize: `${dimensions.width * 0.065}px`, lineHeight: 1 }}
+        >
           {formatDate(player.birthDate)}
         </span>
       </div>

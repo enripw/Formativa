@@ -313,11 +313,11 @@ export default function PlayersList() {
     setBatchProgress({ current: 0, total: playersToProcess.length });
 
     try {
-      // Create PDF with custom size 90x50mm
+      // Create PDF with custom size 50x90mm (5cm x 9cm)
       const doc = new jsPDF({
-        orientation: 'landscape',
+        orientation: 'portrait',
         unit: 'mm',
-        format: [90, 50]
+        format: [50, 90]
       });
 
       for (let i = 0; i < playersToProcess.length; i++) {
@@ -354,7 +354,7 @@ export default function PlayersList() {
           });
 
           if (i > 0) {
-            doc.addPage([90, 50], 'landscape');
+            doc.addPage([50, 90], 'portrait');
           }
 
           // Get actual dimensions from the rendered element to maintain aspect ratio
@@ -364,8 +364,8 @@ export default function PlayersList() {
           const elementRatio = elementWidth / elementHeight;
 
           // PDF Page dimensions
-          const pageWidth = 90;
-          const pageHeight = 50;
+          const pageWidth = 50;
+          const pageHeight = 90;
           const pageRatio = pageWidth / pageHeight;
 
           let imgWidth, imgHeight;
