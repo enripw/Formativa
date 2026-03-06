@@ -120,7 +120,7 @@ export default function Settings() {
 
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Color Primario</label>
+                <label className="text-sm font-medium text-gray-700">Primario</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
@@ -132,7 +132,7 @@ export default function Settings() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Color Secundario</label>
+                <label className="text-sm font-medium text-gray-700">Secundario</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
@@ -144,7 +144,7 @@ export default function Settings() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Color Acento</label>
+                <label className="text-sm font-medium text-gray-700">Acento</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
