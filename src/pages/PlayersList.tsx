@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { playerService } from "../services/playerService";
 import { teamService } from "../services/teamService";
 import { Player, Team } from "../types";
-import { Plus, Edit, Trash2, Search, User, FileDown, Eye, Users, CreditCard, ChevronDown, FileText, Table } from "lucide-react";
+import { Plus, Edit, Trash2, Search, User, FileDown, Eye, Users, CreditCard, ChevronDown, FileText, Table, Upload } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -12,6 +12,7 @@ import { formatDate } from "../lib/dateUtils";
 import { toJpeg } from "html-to-image";
 import CredentialTemplate from "../components/CredentialTemplate";
 import { ProgressiveImage } from "../components/ProgressiveImage";
+import BulkUploadPlayersModal from "../components/BulkUploadPlayersModal";
 
 export default function PlayersList() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -28,6 +29,10 @@ export default function PlayersList() {
   const [teamFilter, setTeamFilter] = useState("");
   const [showTeamSelectModal, setShowTeamSelectModal] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   
   const credentialRef = useRef<HTMLDivElement>(null);
   const downloadMenuRef = useRef<HTMLDivElement>(null);
@@ -86,11 +91,28 @@ export default function PlayersList() {
       await playerService.deletePlayer(playerToDelete.id);
       setPlayers(players.filter((p) => p.id !== playerToDelete.id));
       setPlayerToDelete(null);
+      setSelectedPlayers(prev => prev.filter(id => id !== playerToDelete.id));
     } catch (error) {
       console.error("Error deleting player:", error);
       alert("Error al eliminar el jugador. Verifica los permisos de Firebase.");
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function confirmBulkDelete() {
+    if (selectedPlayers.length === 0) return;
+    setIsBulkDeleting(true);
+    try {
+      await Promise.all(selectedPlayers.map(id => playerService.deletePlayer(id)));
+      setPlayers(players.filter(p => p.id && !selectedPlayers.includes(p.id)));
+      setSelectedPlayers([]);
+      setShowBulkDeleteModal(false);
+    } catch (error) {
+      console.error("Error deleting players:", error);
+      alert("Error al eliminar los jugadores. Verifica los permisos de Firebase.");
+    } finally {
+      setIsBulkDeleting(false);
     }
   }
 
@@ -505,13 +527,31 @@ export default function PlayersList() {
           )}
 
           {canManagePlayers && (
-            <Link
-              to="/jugadores/nuevo"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors flex-1 sm:flex-none whitespace-nowrap"
-            >
-              <Plus className="w-5 h-5" />
-              Nuevo
-            </Link>
+            <div className="flex items-center gap-2 flex-1 sm:flex-none">
+              {selectedPlayers.length > 0 && (
+                <button
+                  onClick={() => setShowBulkDeleteModal(true)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors whitespace-nowrap"
+                >
+                  <Trash2 className="w-5 h-5" />
+                  Eliminar ({selectedPlayers.length})
+                </button>
+              )}
+              <button
+                onClick={() => setShowBulkUploadModal(true)}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors whitespace-nowrap"
+              >
+                <Upload className="w-5 h-5" />
+                <span className="hidden xs:inline">Carga Masiva</span>
+              </button>
+              <Link
+                to="/jugadores/nuevo"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors whitespace-nowrap"
+              >
+                <Plus className="w-5 h-5" />
+                Nuevo
+              </Link>
+            </div>
           )}
         </div>
       </div>
@@ -570,6 +610,24 @@ export default function PlayersList() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
+                  {canManagePlayers && (
+                    <th className="p-4 w-12">
+                      <input
+                        type="checkbox"
+                        checked={filteredPlayers.length > 0 && filteredPlayers.every(p => selectedPlayers.includes(p.id!))}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            const newSelected = new Set([...selectedPlayers, ...filteredPlayers.map(p => p.id!)]);
+                            setSelectedPlayers(Array.from(newSelected));
+                          } else {
+                            const filteredIds = new Set(filteredPlayers.map(p => p.id!));
+                            setSelectedPlayers(selectedPlayers.filter(id => !filteredIds.has(id)));
+                          }
+                        }}
+                        className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                      />
+                    </th>
+                  )}
                   <th className="p-4 font-medium text-gray-500 text-sm">Jugador</th>
                   {isAdmin && <th className="p-4 font-medium text-gray-500 text-sm hidden lg:table-cell">Equipo</th>}
                   <th className="p-4 font-medium text-gray-500 text-sm hidden sm:table-cell">DNI</th>
@@ -580,6 +638,22 @@ export default function PlayersList() {
               <tbody className="divide-y divide-gray-100">
                 {filteredPlayers.map((player) => (
                   <tr key={player.id} className="hover:bg-gray-50 transition-colors">
+                    {canManagePlayers && (
+                      <td className="p-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedPlayers.includes(player.id!)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedPlayers([...selectedPlayers, player.id!]);
+                            } else {
+                              setSelectedPlayers(selectedPlayers.filter(id => id !== player.id));
+                            }
+                          }}
+                          className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                        />
+                      </td>
+                    )}
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0">
@@ -713,6 +787,43 @@ export default function PlayersList() {
         </div>
       )}
 
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="text-center space-y-2">
+              <div className="mx-auto w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">¿Eliminar {selectedPlayers.length} jugadores?</h3>
+              <p className="text-gray-500 text-sm">
+                Estás a punto de eliminar <strong>{selectedPlayers.length}</strong> jugadores. Esta acción no se puede deshacer.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowBulkDeleteModal(false)}
+                disabled={isBulkDeleting}
+                className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmBulkDelete}
+                disabled={isBulkDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex justify-center items-center"
+              >
+                {isBulkDeleting ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  "Sí, eliminar"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Team Selection Modal for Batch Credentials */}
       {showTeamSelectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -810,6 +921,16 @@ export default function PlayersList() {
           </div>
         </div>
       )}
+
+      <BulkUploadPlayersModal
+        isOpen={showBulkUploadModal}
+        onClose={() => setShowBulkUploadModal(false)}
+        onSuccess={() => {
+          fetchPlayers();
+        }}
+        teams={teams}
+        teamIdFilter={isTeamAdmin ? user?.teamId : undefined}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Shield, LogOut, Trophy, User, Settings as SettingsIcon } from "lucide-react";
+import { LayoutDashboard, Users, Shield, LogOut, Trophy, User, Settings as SettingsIcon, Calendar } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
 import { useSettings } from "../contexts/SettingsContext";
@@ -27,6 +27,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       { name: "Usuarios", href: "/usuarios", icon: Shield },
     ] : []),
     ...(isSuperAdmin ? [
+      { name: "Torneos", href: "/torneos", icon: Calendar },
       { name: "Conf.", href: "/configuracion", icon: SettingsIcon }
     ] : []),
     { name: "Mi Perfil", href: "/perfil", icon: User },

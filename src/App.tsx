@@ -16,6 +16,11 @@ import TeamsList from "./pages/TeamsList";
 import TeamForm from "./pages/TeamForm";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import TournamentsList from "./pages/TournamentsList";
+import TournamentForm from "./pages/TournamentForm";
+import TournamentDetails from "./pages/TournamentDetails";
+import CategoryDetails from "./pages/CategoryDetails";
+import MatchesList from "./pages/MatchesList";
 import { AuthProvider } from "./contexts/AuthContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -84,6 +89,37 @@ export default function App() {
                     <Route path="/equipos/editar/:id" element={
                       <ProtectedRoute requireGlobalAdmin>
                         <TeamForm />
+                      </ProtectedRoute>
+                    } />
+
+                    <Route path="/torneos" element={
+                      <ProtectedRoute requireSuperAdmin>
+                        <TournamentsList />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/torneos/nuevo" element={
+                      <ProtectedRoute requireSuperAdmin>
+                        <TournamentForm />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/torneos/editar/:id" element={
+                      <ProtectedRoute requireSuperAdmin>
+                        <TournamentForm />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/torneos/:id" element={
+                      <ProtectedRoute requireSuperAdmin>
+                        <TournamentDetails />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/torneos/:tournamentId/categoria/:categoryId" element={
+                      <ProtectedRoute requireSuperAdmin>
+                        <CategoryDetails />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/torneos/:tournamentId/categoria/:categoryId/partidos" element={
+                      <ProtectedRoute requireSuperAdmin>
+                        <MatchesList />
                       </ProtectedRoute>
                     } />
 
