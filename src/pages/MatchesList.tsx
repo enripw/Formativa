@@ -7,6 +7,7 @@ import { Team } from "../types";
 import { ArrowLeft, Save, Edit2, X } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Modal from "../components/Modal";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function MatchesList() {
   const { tournamentId, categoryId } = useParams<{ tournamentId: string, categoryId: string }>();
@@ -14,6 +15,8 @@ export default function MatchesList() {
   const groupId = searchParams.get('groupId');
   const leagueId = searchParams.get('leagueId');
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
 
   const [matches, setMatches] = useState<Match[]>([]);
   const [teams, setTeams] = useState<Record<string, Team>>({});
@@ -40,10 +43,16 @@ export default function MatchesList() {
   const loadData = async (cId: string) => {
     try {
       setLoading(true);
-      const [mData, teamsData] = await Promise.all([
+      const [tData, mData, teamsData] = await Promise.all([
+        tournamentId ? tournamentService.getTournament(tournamentId) : Promise.resolve(null),
         tournamentService.getMatches(cId),
         teamService.getTeams()
       ]);
+      
+      if (tData && !tData.isPublic && !isSuperAdmin) {
+        navigate("/torneos");
+        return;
+      }
       
       let filteredMatches = mData;
       if (groupId) {
@@ -226,38 +235,40 @@ export default function MatchesList() {
                       </div>
                       
                       {/* Actions */}
-                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                        {isEditing ? (
-                          <>
-                            <button
-                              onClick={() => handleSaveScore(match.id!)}
-                              disabled={saving}
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                              title="Guardar"
-                            >
-                              <Save className="w-5 h-5" />
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              disabled={saving}
-                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Cancelar"
-                            >
-                              <X className="w-5 h-5" />
-                            </button>
-                          </>
-                        ) : (
-                          !match.promotionResolved && (
-                            <button
-                              onClick={() => handleEditClick(match)}
-                              className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                              title="Editar Resultado"
-                            >
-                              <Edit2 className="w-5 h-5" />
-                            </button>
-                          )
-                        )}
-                      </div>
+                      {isSuperAdmin && (
+                        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                          {isEditing ? (
+                            <>
+                              <button
+                                onClick={() => handleSaveScore(match.id!)}
+                                disabled={saving}
+                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                title="Guardar"
+                              >
+                                <Save className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                disabled={saving}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Cancelar"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                            </>
+                          ) : (
+                            !match.promotionResolved && (
+                              <button
+                                onClick={() => handleEditClick(match)}
+                                className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                title="Editar Resultado"
+                              >
+                                <Edit2 className="w-5 h-5" />
+                              </button>
+                            )
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

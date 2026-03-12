@@ -8,10 +8,13 @@ import { ArrowLeft, Trophy, Medal, Shield, ChevronRight } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { calculateStandings, generateMainLeagues, generateRoundRobinFixtures, generatePromotionMatch, resolvePromotionMatch } from "../services/tournamentLogic";
 import Modal from "../components/Modal";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function CategoryDetails() {
   const { tournamentId, categoryId } = useParams<{ tournamentId: string, categoryId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
   
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [category, setCategory] = useState<TournamentCategory | null>(null);
@@ -55,6 +58,11 @@ export default function CategoryDetails() {
         tournamentService.getMatches(cId),
         teamService.getTeams()
       ]);
+      
+      if (tData && !tData.isPublic && !isSuperAdmin) {
+        navigate("/torneos");
+        return;
+      }
       
       setTournament(tData);
       setCategory(cData.find(c => c.id === cId) || null);
@@ -300,13 +308,15 @@ export default function CategoryDetails() {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-gray-900">Fase de Nivelación</h2>
-            <button
-              onClick={handleFinishLeveling}
-              disabled={generating}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              {generating ? "Generando Ligas..." : "Finalizar Nivelación"}
-            </button>
+            {isSuperAdmin && (
+              <button
+                onClick={handleFinishLeveling}
+                disabled={generating}
+                className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {generating ? "Generando Ligas..." : "Finalizar Nivelación"}
+              </button>
+            )}
           </div>
           
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -336,13 +346,15 @@ export default function CategoryDetails() {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-gray-900">Ligas Principales</h2>
-            <button
-              onClick={handleGeneratePromotion}
-              disabled={generating}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              {generating ? "Generando..." : "Generar Promoción"}
-            </button>
+            {isSuperAdmin && (
+              <button
+                onClick={handleGeneratePromotion}
+                disabled={generating}
+                className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {generating ? "Generando..." : "Generar Promoción"}
+              </button>
+            )}
           </div>
           
           {matches.filter(m => m.phase === 'promotion').length > 0 && (
@@ -362,19 +374,28 @@ export default function CategoryDetails() {
                         <span className="font-medium text-gray-900">{awayTeam?.name || 'Equipo'} (Champ)</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Link 
-                          to={`/torneos/${tournamentId}/categoria/${categoryId}/partidos`}
-                          className="text-sm text-primary hover:underline"
-                        >
-                          Editar Resultado
-                        </Link>
-                        {match.status === 'played' && (
-                          <button
-                            onClick={() => handleResolvePromotion(match)}
-                            className="bg-amber-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-amber-700 transition-colors"
-                          >
-                            Resolver Ascenso/Descenso
-                          </button>
+                        {isSuperAdmin && (
+                          <>
+                            <Link 
+                              to={`/torneos/${tournamentId}/categoria/${categoryId}/partidos`}
+                              className="text-sm text-primary hover:underline"
+                            >
+                              Editar Resultado
+                            </Link>
+                            {match.status === 'played' && !match.promotionResolved && (
+                              <button
+                                onClick={() => handleResolvePromotion(match)}
+                                className="bg-amber-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-amber-700 transition-colors"
+                              >
+                                Resolver Ascenso/Descenso
+                              </button>
+                            )}
+                          </>
+                        )}
+                        {match.promotionResolved && (
+                          <span className="text-sm font-medium text-green-600 bg-green-50 px-3 py-1.5 rounded-md border border-green-200">
+                            Promoción Resuelta
+                          </span>
                         )}
                       </div>
                     </div>

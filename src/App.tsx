@@ -93,7 +93,7 @@ export default function App() {
                     } />
 
                     <Route path="/torneos" element={
-                      <ProtectedRoute requireSuperAdmin>
+                      <ProtectedRoute>
                         <TournamentsList />
                       </ProtectedRoute>
                     } />
@@ -108,17 +108,17 @@ export default function App() {
                       </ProtectedRoute>
                     } />
                     <Route path="/torneos/:id" element={
-                      <ProtectedRoute requireSuperAdmin>
+                      <ProtectedRoute>
                         <TournamentDetails />
                       </ProtectedRoute>
                     } />
                     <Route path="/torneos/:tournamentId/categoria/:categoryId" element={
-                      <ProtectedRoute requireSuperAdmin>
+                      <ProtectedRoute>
                         <CategoryDetails />
                       </ProtectedRoute>
                     } />
                     <Route path="/torneos/:tournamentId/categoria/:categoryId/partidos" element={
-                      <ProtectedRoute requireSuperAdmin>
+                      <ProtectedRoute>
                         <MatchesList />
                       </ProtectedRoute>
                     } />

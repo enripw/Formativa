@@ -21,13 +21,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { name: "P. Control", href: "/", icon: LayoutDashboard },
+    { name: "Torneos", href: "/torneos", icon: Calendar },
     { name: "Jugadores", href: "/jugadores", icon: Users },
     ...(isGlobalAdmin ? [
       { name: "Equipos", href: "/equipos", icon: Trophy },
       { name: "Usuarios", href: "/usuarios", icon: Shield },
     ] : []),
     ...(isSuperAdmin ? [
-      { name: "Torneos", href: "/torneos", icon: Calendar },
       { name: "Conf.", href: "/configuracion", icon: SettingsIcon }
     ] : []),
     { name: "Mi Perfil", href: "/perfil", icon: User },

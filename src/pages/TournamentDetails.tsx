@@ -8,10 +8,14 @@ import { ArrowLeft, Play, Users, Trophy, ChevronRight, Trash2, Edit } from "luci
 import LoadingSpinner from "../components/LoadingSpinner";
 import { getTeamsForCategory, generateGroups, generateRoundRobinFixtures } from "../services/tournamentLogic";
 import Modal from "../components/Modal";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function TournamentDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
+
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [categories, setCategories] = useState<TournamentCategory[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -55,6 +59,12 @@ export default function TournamentDetails() {
         tournamentService.getCategories(tournamentId),
         playerService.getPlayers()
       ]);
+      
+      if (tData && !tData.isPublic && !isSuperAdmin) {
+        navigate("/torneos");
+        return;
+      }
+      
       setTournament(tData);
       setCategories(cData);
       setPlayers(pData);
@@ -186,25 +196,29 @@ export default function TournamentDetails() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Link
-            to={`/torneos/editar/${id}`}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <Edit className="w-4 h-4" />
-            Editar
-          </Link>
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-          >
-            {deleting ? <LoadingSpinner /> : <Trash2 className="w-4 h-4" />}
-            Eliminar
-          </button>
+          {isSuperAdmin && (
+            <>
+              <Link
+                to={`/torneos/editar/${id}`}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Edit className="w-4 h-4" />
+                Editar
+              </Link>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {deleting ? <LoadingSpinner /> : <Trash2 className="w-4 h-4" />}
+                Eliminar
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      {tournament.status === 'draft' && (
+      {isSuperAdmin && tournament.status === 'draft' && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <h3 className="text-lg font-semibold text-amber-800">Fase de Nivelación</h3>

@@ -15,6 +15,7 @@ export default function TournamentForm() {
   const [formData, setFormData] = useState({
     name: "",
     year: new Date().getFullYear(),
+    isPublic: false,
   });
 
   const [categories, setCategories] = useState<{ id?: string, name: string; years: string }[]>([
@@ -42,6 +43,7 @@ export default function TournamentForm() {
         setFormData({
           name: tData.name,
           year: tData.year,
+          isPublic: tData.isPublic || false,
         });
       }
 
@@ -73,6 +75,7 @@ export default function TournamentForm() {
         await tournamentService.updateTournament(id, {
           name: formData.name,
           year: formData.year,
+          isPublic: formData.isPublic,
         });
       } else {
         // Create new
@@ -80,6 +83,7 @@ export default function TournamentForm() {
           name: formData.name,
           year: formData.year,
           status: 'draft',
+          isPublic: formData.isPublic,
         });
       }
 
@@ -160,6 +164,24 @@ export default function TournamentForm() {
                 onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value, 10) })}
                 className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm p-2 border"
               />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-lg border border-gray-100">
+            <input
+              type="checkbox"
+              id="isPublic"
+              checked={formData.isPublic}
+              onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+              className="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary"
+            />
+            <div>
+              <label htmlFor="isPublic" className="font-medium text-gray-900 block">
+                Torneo Público
+              </label>
+              <p className="text-sm text-gray-500">
+                Si está activado, todos los usuarios podrán ver el fixture y resultados.
+              </p>
             </div>
           </div>
 

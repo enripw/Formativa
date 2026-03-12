@@ -3,6 +3,7 @@ export interface Tournament {
   year: number;
   name: string;
   status: 'draft' | 'leveling' | 'main' | 'finished';
+  isPublic?: boolean;
   createdAt?: number;
 }
 
