@@ -37,5 +37,6 @@ export interface AppSettings {
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
+  tournamentsEnabled?: boolean;
   updatedAt?: number;
 }

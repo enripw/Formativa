@@ -12,6 +12,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   primaryColor: "#10b981", // Emerald 500
   secondaryColor: "#0f172a", // Slate 900
   accentColor: "#f59e0b", // Amber 500
+  tournamentsEnabled: true,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

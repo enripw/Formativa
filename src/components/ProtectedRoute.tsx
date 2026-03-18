@@ -1,23 +1,27 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useSettings } from '../contexts/SettingsContext';
 import LoadingSpinner from './LoadingSpinner';
 
 export default function ProtectedRoute({ 
   children, 
   requireAdmin = false,
   requireSuperAdmin = false,
-  requireGlobalAdmin = false
+  requireGlobalAdmin = false,
+  requireTournamentsEnabled = false
 }: { 
   children: React.ReactNode;
   requireAdmin?: boolean;
   requireSuperAdmin?: boolean;
   requireGlobalAdmin?: boolean;
+  requireTournamentsEnabled?: boolean;
 }) {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { settings, loading: settingsLoading } = useSettings();
   const location = useLocation();
 
-  if (loading) {
+  if (authLoading || settingsLoading) {
     return <LoadingSpinner fullPage message="Verificando sesión..." />;
   }
 
@@ -39,6 +43,10 @@ export default function ProtectedRoute({
   }
 
   if (requireAdmin && !isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requireTournamentsEnabled && settings.tournamentsEnabled === false && !isSuperAdmin) {
     return <Navigate to="/" replace />;
   }
 

@@ -118,7 +118,32 @@ export default function Settings() {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Habilitar Sección Torneos</label>
+              <div className="flex items-center gap-3 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setSettings({ ...settings, tournamentsEnabled: !settings.tournamentsEnabled })}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                    settings.tournamentsEnabled ? 'bg-primary' : 'bg-gray-200'
+                  }`}
+                  role="switch"
+                  aria-checked={settings.tournamentsEnabled}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      settings.tournamentsEnabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+                <span className="text-sm text-gray-600">
+                  {settings.tournamentsEnabled ? 'Habilitado para todos' : 'Solo visible para Super Admin'}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 md:col-span-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Primario</label>
                 <div className="flex items-center gap-2">

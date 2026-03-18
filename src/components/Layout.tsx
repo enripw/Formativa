@@ -18,10 +18,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
   const isGlobalAdmin = user?.role === 'admin';
+  const showTournaments = settings.tournamentsEnabled !== false || isSuperAdmin;
 
   const navItems = [
     { name: "P. Control", href: "/", icon: LayoutDashboard },
-    { name: "Torneos", href: "/torneos", icon: Calendar },
+    ...(showTournaments ? [{ name: "Torneos", href: "/torneos", icon: Calendar }] : []),
     { name: "Jugadores", href: "/jugadores", icon: Users },
     ...(isGlobalAdmin ? [
       { name: "Equipos", href: "/equipos", icon: Trophy },
