@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { userService } from "../services/userService";
 import { teamService } from "../services/teamService";
 import { User, Team } from "../types";
@@ -9,20 +10,13 @@ import { useAuth } from "../contexts/AuthContext";
 import { ProgressiveImage } from "../components/ProgressiveImage";
 
 export default function UsersList() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [teams, setTeams] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const { user: currentUser } = useAuth();
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['usersList'],
+    queryFn: async () => {
       const [usersData, teamsData] = await Promise.all([
         userService.getUsers(),
         teamService.getTeams()
@@ -35,28 +29,30 @@ export default function UsersList() {
       
       const filteredUsers = usersData.filter(u => u.email !== 'enripw@gmail.com');
       
-      setUsers(filteredUsers);
-      setTeams(teamMap);
-    } catch (error) {
-      console.error("Error loading users data:", error);
-    } finally {
-      setLoading(false);
+      return { users: filteredUsers, teams: teamMap };
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => userService.deleteUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['usersList'] });
+      setUserToDelete(null);
+    },
+    onError: (error: any) => {
+      alert(error.message || "Error al eliminar el usuario");
+      setUserToDelete(null);
+    }
+  });
+
+  const confirmDelete = () => {
+    if (userToDelete?.id) {
+      deleteMutation.mutate(userToDelete.id);
     }
   };
 
-  const confirmDelete = async () => {
-    if (!userToDelete?.id) return;
-    setIsDeleting(true);
-    try {
-      await userService.deleteUser(userToDelete.id);
-      setUsers(users.filter((u) => u.id !== userToDelete.id));
-      setUserToDelete(null);
-    } catch (error: any) {
-      alert(error.message || "Error al eliminar el usuario");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  const users = data?.users || [];
+  const teams = data?.teams || {};
 
   return (
     <div className="space-y-6">
@@ -73,8 +69,10 @@ export default function UsersList() {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-          {loading ? (
+          {isLoading ? (
             <LoadingSpinner message="Cargando usuarios..." />
+          ) : isError ? (
+            <div className="p-8 text-center text-red-500">Error al cargar los usuarios.</div>
           ) : users.length === 0 ? (
             <div className="p-8 text-center text-gray-500">No se encontraron usuarios.</div>
           ) : (
@@ -175,23 +173,23 @@ export default function UsersList() {
               </div>
               <h3 className="text-lg font-bold text-gray-900">¿Eliminar usuario?</h3>
               <p className="text-gray-500 text-sm">
-                Estás a punto de eliminar a <strong>{userToDelete.name}</strong>. Esta acción no se puede deshacer.
+                Estás a punto de eliminar al usuario <strong>{userToDelete.name}</strong>. Esta acción no se puede deshacer.
               </p>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setUserToDelete(null)}
-                disabled={isDeleting}
+                disabled={deleteMutation.isPending}
                 className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm font-medium transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
-                disabled={isDeleting}
+                disabled={deleteMutation.isPending}
                 className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex justify-center items-center"
               >
-                {isDeleting ? (
+                {deleteMutation.isPending ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   "Sí, eliminar"

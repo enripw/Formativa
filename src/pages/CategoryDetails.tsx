@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { tournamentService } from "../services/tournamentService";
 import { teamService } from "../services/teamService";
 import { Tournament, TournamentCategory, Group, Match, League, TeamStanding } from "../types/tournament";
@@ -9,6 +9,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { calculateStandings, generateMainLeagues, generateRoundRobinFixtures, generatePromotionMatch, resolvePromotionMatch } from "../services/tournamentLogic";
 import Modal from "../components/Modal";
 import { useAuth } from "../contexts/AuthContext";
+import { useState } from "react";
 
 export default function CategoryDetails() {
   const { tournamentId, categoryId } = useParams<{ tournamentId: string, categoryId: string }>();
@@ -16,13 +17,6 @@ export default function CategoryDetails() {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
   
-  const [tournament, setTournament] = useState<Tournament | null>(null);
-  const [category, setCategory] = useState<TournamentCategory | null>(null);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [leagues, setLeagues] = useState<League[]>([]);
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [teams, setTeams] = useState<Record<string, Team>>({});
-  const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
     isOpen: boolean;
@@ -41,46 +35,47 @@ export default function CategoryDetails() {
     message: "",
   });
 
-  useEffect(() => {
-    if (tournamentId && categoryId) {
-      loadData(tournamentId, categoryId);
-    }
-  }, [tournamentId, categoryId]);
-
-  const loadData = async (tId: string, cId: string) => {
-    try {
-      setLoading(true);
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['categoryDetails', tournamentId, categoryId],
+    queryFn: async () => {
+      if (!tournamentId || !categoryId) return null;
       const [tData, cData, gData, lData, mData, teamsData] = await Promise.all([
-        tournamentService.getTournament(tId),
-        tournamentService.getCategories(tId),
-        tournamentService.getGroups(cId),
-        tournamentService.getLeagues(cId),
-        tournamentService.getMatches(cId),
+        tournamentService.getTournament(tournamentId),
+        tournamentService.getCategories(tournamentId),
+        tournamentService.getGroups(categoryId),
+        tournamentService.getLeagues(categoryId),
+        tournamentService.getMatches(categoryId),
         teamService.getTeams()
       ]);
       
       if (tData && !tData.isPublic && !isSuperAdmin) {
-        navigate("/torneos");
-        return;
+        throw new Error("Unauthorized");
       }
       
-      setTournament(tData);
-      setCategory(cData.find(c => c.id === cId) || null);
-      setGroups(gData);
-      setLeagues(lData);
-      setMatches(mData);
+      const category = cData.find(c => c.id === categoryId) || null;
       
       const teamMap: Record<string, Team> = {};
       teamsData.forEach(t => {
         if (t.id) teamMap[t.id] = t;
       });
-      setTeams(teamMap);
-    } catch (error) {
-      console.error("Error loading category details:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      
+      return { tournament: tData, category, groups: gData, leagues: lData, matches: mData, teams: teamMap };
+    },
+    enabled: !!tournamentId && !!categoryId,
+    retry: false,
+  });
+
+  const tournament = data?.tournament;
+  const category = data?.category;
+  const groups = data?.groups || [];
+  const leagues = data?.leagues || [];
+  const matches = data?.matches || [];
+  const teams = data?.teams || {};
+
+  if (isError) {
+    navigate("/torneos");
+    return null;
+  }
 
   const showAlert = (title: string, message: string) => {
     setAlertMessage({ isOpen: true, title, message });
@@ -107,11 +102,10 @@ export default function CategoryDetails() {
       // Update tournament status if not already main
       if (tournament!.status !== 'main') {
         await tournamentService.updateTournament(tournamentId!, { status: 'main' });
-        setTournament({ ...tournament!, status: 'main' });
       }
       
       // Reload data
-      await loadData(tournamentId!, categoryId!);
+      await refetch();
       showAlert("Éxito", "Ligas generadas con éxito.");
     } catch (error: any) {
       console.error("Error generating main leagues:", error);
@@ -171,7 +165,7 @@ export default function CategoryDetails() {
     setGenerating(true);
     try {
       await tournamentService.saveMatches([promotionMatch]);
-      await loadData(tournamentId, categoryId);
+      await refetch();
       showAlert("Éxito", "Partido de promoción generado con éxito.");
     } catch (error: any) {
       console.error("Error generating promotion match:", error);
@@ -191,7 +185,7 @@ export default function CategoryDetails() {
       const matchesToSave = [...updatedMatches, resolvedMatch];
       await tournamentService.saveMatches(matchesToSave);
       
-      await loadData(tournamentId!, categoryId!);
+      await refetch();
       showAlert("Éxito", "Promoción resuelta y ligas actualizadas.");
     } catch (error: any) {
       console.error("Error resolving promotion:", error);
@@ -222,8 +216,8 @@ export default function CategoryDetails() {
     );
   };
 
-  if (loading) return <LoadingSpinner message="Cargando categoría..." />;
-  if (!category) return <div className="p-8 text-center">Categoría no encontrada</div>;
+  if (isLoading) return <LoadingSpinner message="Cargando categoría..." />;
+  if (isError || !category) return <div className="p-8 text-center">Categoría no encontrada</div>;
 
   const renderStandingsTable = (standings: TeamStanding[], title: string, isLeague: boolean = false) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">

@@ -8,7 +8,11 @@ import {
   deleteDoc, 
   query, 
   where,
-  writeBatch
+  writeBatch,
+  orderBy,
+  limit,
+  startAfter,
+  getCountFromServer
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { 
@@ -21,10 +25,33 @@ import {
 
 export const tournamentService = {
   // Tournaments
-  async getTournaments(): Promise<Tournament[]> {
+  async countTournaments(): Promise<number> {
     const q = query(collection(db, "tournaments"));
+    const snapshot = await getCountFromServer(q);
+    return snapshot.data().count;
+  },
+
+  async getTournaments(): Promise<Tournament[]> {
+    const q = query(collection(db, "tournaments"), orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament));
+  },
+
+  async getTournamentsPaginated(pageSize: number = 20, lastDoc?: any): Promise<{ tournaments: Tournament[], lastDoc: any, hasMore: boolean }> {
+    let constraints: any[] = [orderBy("createdAt", "desc")];
+    if (lastDoc) {
+      constraints.push(startAfter(lastDoc));
+    }
+    constraints.push(limit(pageSize));
+
+    const q = query(collection(db, "tournaments"), ...constraints);
+    const snapshot = await getDocs(q);
+    
+    const tournaments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament));
+    const newLastDoc = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
+    const hasMore = snapshot.docs.length === pageSize;
+
+    return { tournaments, lastDoc: newLastDoc, hasMore };
   },
 
   async getTournament(id: string): Promise<Tournament | null> {

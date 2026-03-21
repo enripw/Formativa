@@ -1,23 +1,19 @@
-import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { playerService } from "../services/playerService";
 import { teamService } from "../services/teamService";
-import { Player, Team } from "../types";
 import { ArrowLeft, User, Calendar, CreditCard, Clock, Cake, Users, Download, IdCard, Trophy } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { formatDate, calculateAge } from "../lib/dateUtils";
 import { useAuth } from "../contexts/AuthContext";
 import { toJpeg } from "html-to-image";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import CredentialTemplate from "../components/CredentialTemplate";
 import { ProgressiveImage } from "../components/ProgressiveImage";
 
 export default function PlayerDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [player, setPlayer] = useState<Player | null>(null);
-  const [team, setTeam] = useState<Team | null>(null);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const credentialRef = useRef<HTMLDivElement>(null);
   const onReadyResolveRef = useRef<(() => void) | null>(null);
@@ -27,34 +23,29 @@ export default function PlayerDetails() {
   const isTeamAdmin = user?.role === 'team_admin';
   const isAdmin = user?.role === 'admin';
 
-  useEffect(() => {
-    if (id) {
-      loadData();
-    }
-  }, [id]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const playerData = await playerService.getPlayer(id!);
-      if (playerData) {
-        setPlayer(playerData);
-        if (playerData.teamId) {
-          const teamData = await teamService.getTeamById(playerData.teamId);
-          setTeam(teamData);
-        }
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['playerDetails', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const playerData = await playerService.getPlayer(id);
+      if (!playerData) return null;
+      
+      let teamData = null;
+      if (playerData.teamId) {
+        teamData = await teamService.getTeamById(playerData.teamId);
       }
-    } catch (error) {
-      console.error("Error loading player details:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return { player: playerData, team: teamData };
+    },
+    enabled: !!id,
+  });
+
+  const player = data?.player;
+  const team = data?.team;
 
   const canEdit = isAdmin || (isTeamAdmin && user?.teamId === player?.teamId);
 
   const generateCredential = async () => {
-    if (!credentialRef.current) return;
+    if (!credentialRef.current || !player) return;
     
     try {
       setIsGenerating(true);
@@ -90,11 +81,11 @@ export default function PlayerDetails() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingSpinner message="Cargando carnet del jugador..." />;
   }
 
-  if (!player) {
+  if (isError || !player) {
     return (
       <div className="max-w-2xl mx-auto p-8 text-center space-y-4">
         <p className="text-gray-500">No se encontró el jugador.</p>

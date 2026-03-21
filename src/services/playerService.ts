@@ -10,6 +10,10 @@ import {
   query,
   where,
   orderBy,
+  getCountFromServer,
+  limit,
+  startAfter,
+  QueryDocumentSnapshot
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { Player } from "../types";
@@ -51,6 +55,139 @@ export const playerService = {
         console.warn("Firestore index required. Please create it using the link in the console.");
       }
       throw error;
+    }
+  },
+
+  async getPlayersPaginated(
+    teamId?: string, 
+    pageSize: number = 20, 
+    lastDoc?: QueryDocumentSnapshot | null
+  ): Promise<{ players: Player[], lastDoc: QueryDocumentSnapshot | null, hasMore: boolean }> {
+    if (!isConfigured) return { players: [], lastDoc: null, hasMore: false };
+    
+    try {
+      let constraints: any[] = [];
+      
+      if (teamId) {
+        constraints.push(where("teamId", "==", teamId));
+        // Note: Without orderBy("createdAt", "desc"), startAfter will use the document ID order.
+        // To avoid requiring a composite index for every team, we paginate by ID or default order.
+      } else {
+        constraints.push(orderBy("createdAt", "desc"));
+      }
+      
+      if (lastDoc) {
+        constraints.push(startAfter(lastDoc));
+      }
+      
+      constraints.push(limit(pageSize));
+      
+      const q = query(collection(db!, COLLECTION_NAME), ...constraints);
+      const snapshot = await getDocs(q);
+      
+      let players = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as any),
+      })) as Player[];
+
+      // Sort in memory if we filtered by teamId (only sorts the current page)
+      if (teamId) {
+        players.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      }
+
+      const newLastDoc = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
+      const hasMore = snapshot.docs.length === pageSize;
+
+      return { players, lastDoc: newLastDoc, hasMore };
+    } catch (error: any) {
+      console.error("Error fetching paginated players:", error);
+      throw error;
+    }
+  },
+
+  async countPlayers(teamId?: string): Promise<number> {
+    if (!isConfigured) return 0;
+    try {
+      let q;
+      if (teamId) {
+        q = query(collection(db!, COLLECTION_NAME), where("teamId", "==", teamId));
+      } else {
+        q = collection(db!, COLLECTION_NAME);
+      }
+      const snapshot = await getCountFromServer(q);
+      return snapshot.data().count;
+    } catch (error) {
+      console.error("Error counting players:", error);
+      return 0;
+    }
+  },
+
+  async countRecentPlayers(teamId?: string, days: number = 7): Promise<number> {
+    if (!isConfigured) return 0;
+    try {
+      const timestamp = Date.now() - days * 24 * 60 * 60 * 1000;
+      let q;
+      if (teamId) {
+        q = query(
+          collection(db!, COLLECTION_NAME), 
+          where("teamId", "==", teamId),
+          where("createdAt", ">", timestamp)
+        );
+      } else {
+        q = query(
+          collection(db!, COLLECTION_NAME), 
+          where("createdAt", ">", timestamp)
+        );
+      }
+      const snapshot = await getCountFromServer(q);
+      return snapshot.data().count;
+    } catch (error) {
+      console.error("Error counting recent players:", error);
+      // Fallback if composite index is missing
+      if (teamId) {
+        try {
+          const allTeamPlayers = await this.getPlayers(teamId);
+          return allTeamPlayers.filter(p => p.createdAt && p.createdAt > Date.now() - days * 24 * 60 * 60 * 1000).length;
+        } catch (e) {
+          return 0;
+        }
+      }
+      return 0;
+    }
+  },
+
+  async getRecentPlayers(teamId?: string, maxCount: number = 5): Promise<Player[]> {
+    if (!isConfigured) return [];
+    try {
+      let q;
+      if (teamId) {
+        // Without composite index, we have to fetch all for the team and sort in memory
+        q = query(
+          collection(db!, COLLECTION_NAME), 
+          where("teamId", "==", teamId)
+        );
+        const snapshot = await getDocs(q);
+        let players = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as any),
+        })) as Player[];
+        players.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        return players.slice(0, maxCount);
+      } else {
+        q = query(
+          collection(db!, COLLECTION_NAME), 
+          orderBy("createdAt", "desc"),
+          limit(maxCount)
+        );
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as any),
+        })) as Player[];
+      }
+    } catch (error) {
+      console.error("Error fetching recent players:", error);
+      return [];
     }
   },
 

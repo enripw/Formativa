@@ -7,7 +7,10 @@ import {
   updateDoc, 
   deleteDoc,
   query,
-  orderBy
+  orderBy,
+  getCountFromServer,
+  limit,
+  startAfter
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage, isConfigured } from "../lib/firebase";
@@ -20,6 +23,20 @@ const normalizeString = (str: string) => {
 };
 
 export const teamService = {
+  countTeams: async (): Promise<number> => {
+    if (!db) {
+      const data = localStorage.getItem("liga_formativa_teams");
+      return data ? JSON.parse(data).length : 0;
+    }
+    try {
+      const snapshot = await getCountFromServer(collection(db, COLLECTION_NAME));
+      return snapshot.data().count;
+    } catch (error) {
+      console.error("Error counting teams:", error);
+      return 0;
+    }
+  },
+
   getTeams: async (): Promise<Team[]> => {
     if (!db) {
       const data = localStorage.getItem("liga_formativa_teams");
@@ -35,6 +52,38 @@ export const teamService = {
       })) as Team[];
     } catch (error) {
       console.error("Error fetching teams:", error);
+      throw error;
+    }
+  },
+
+  getTeamsPaginated: async (pageSize: number = 20, lastDoc?: any): Promise<{ teams: Team[], lastDoc: any, hasMore: boolean }> => {
+    if (!db) {
+      const data = localStorage.getItem("liga_formativa_teams");
+      const allTeams = data ? JSON.parse(data) : [];
+      return { teams: allTeams, lastDoc: null, hasMore: false };
+    }
+
+    try {
+      let constraints: any[] = [orderBy("createdAt", "desc")];
+      if (lastDoc) {
+        constraints.push(startAfter(lastDoc));
+      }
+      constraints.push(limit(pageSize));
+
+      const q = query(collection(db, COLLECTION_NAME), ...constraints);
+      const snapshot = await getDocs(q);
+      
+      const teams = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Team[];
+
+      const newLastDoc = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
+      const hasMore = snapshot.docs.length === pageSize;
+
+      return { teams, lastDoc: newLastDoc, hasMore };
+    } catch (error) {
+      console.error("Error fetching paginated teams:", error);
       throw error;
     }
   },

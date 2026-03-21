@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { tournamentService } from "../services/tournamentService";
 import { teamService } from "../services/teamService";
 import { Match, Group, League } from "../types/tournament";
@@ -8,6 +8,7 @@ import { ArrowLeft, Save, Edit2, X } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Modal from "../components/Modal";
 import { useAuth } from "../contexts/AuthContext";
+import { useState } from "react";
 
 export default function MatchesList() {
   const { tournamentId, categoryId } = useParams<{ tournamentId: string, categoryId: string }>();
@@ -18,9 +19,6 @@ export default function MatchesList() {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
 
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [teams, setTeams] = useState<Record<string, Team>>({});
-  const [loading, setLoading] = useState(true);
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   const [editScores, setEditScores] = useState<{ home: number | '', away: number | '' }>({ home: '', away: '' });
   const [saving, setSaving] = useState(false);
@@ -34,24 +32,18 @@ export default function MatchesList() {
     setAlertMessage({ isOpen: true, title, message });
   };
 
-  useEffect(() => {
-    if (categoryId) {
-      loadData(categoryId);
-    }
-  }, [categoryId, groupId, leagueId]);
-
-  const loadData = async (cId: string) => {
-    try {
-      setLoading(true);
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['matchesList', categoryId, groupId, leagueId],
+    queryFn: async () => {
+      if (!categoryId) return null;
       const [tData, mData, teamsData] = await Promise.all([
         tournamentId ? tournamentService.getTournament(tournamentId) : Promise.resolve(null),
-        tournamentService.getMatches(cId),
+        tournamentService.getMatches(categoryId),
         teamService.getTeams()
       ]);
       
       if (tData && !tData.isPublic && !isSuperAdmin) {
-        navigate("/torneos");
-        return;
+        throw new Error("Unauthorized");
       }
       
       let filteredMatches = mData;
@@ -64,19 +56,24 @@ export default function MatchesList() {
       // Sort by round
       filteredMatches.sort((a, b) => a.round - b.round);
       
-      setMatches(filteredMatches);
-      
       const teamMap: Record<string, Team> = {};
       teamsData.forEach(t => {
         if (t.id) teamMap[t.id] = t;
       });
-      setTeams(teamMap);
-    } catch (error) {
-      console.error("Error loading matches:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      
+      return { matches: filteredMatches, teams: teamMap };
+    },
+    enabled: !!categoryId,
+    retry: false,
+  });
+
+  const matches = data?.matches || [];
+  const teams = data?.teams || {};
+
+  if (isError) {
+    navigate("/torneos");
+    return null;
+  }
 
   const handleEditClick = (match: Match) => {
     setEditingMatchId(match.id!);
@@ -108,7 +105,7 @@ export default function MatchesList() {
         status: 'played'
       });
       
-      setMatches(matches.map(m => m.id === matchId ? { ...m, homeScore, awayScore, status: 'played' } : m));
+      await refetch();
       setEditingMatchId(null);
     } catch (error: any) {
       console.error("Error saving match score:", error);
@@ -118,7 +115,7 @@ export default function MatchesList() {
     }
   };
 
-  if (loading) return <LoadingSpinner message="Cargando partidos..." />;
+  if (isLoading) return <LoadingSpinner message="Cargando partidos..." />;
 
   // Group matches by phase and round
   const matchesByPhaseAndRound: Record<string, Record<number, Match[]>> = {};

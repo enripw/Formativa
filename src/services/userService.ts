@@ -7,7 +7,8 @@ import {
   updateDoc, 
   deleteDoc,
   query,
-  where
+  where,
+  getCountFromServer
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage, isConfigured } from "../lib/firebase";
@@ -27,6 +28,20 @@ const defaultUser: User = {
 };
 
 export const userService = {
+  countUsers: async (): Promise<number> => {
+    if (!db) {
+      const data = localStorage.getItem("liga_formativa_users");
+      return data ? JSON.parse(data).length : 1;
+    }
+    try {
+      const snapshot = await getCountFromServer(collection(db, COLLECTION_NAME));
+      return snapshot.data().count;
+    } catch (error) {
+      console.error("Error counting users:", error);
+      return 0;
+    }
+  },
+
   getUsers: async (): Promise<User[]> => {
     if (!db) {
       // Fallback to local storage if Firebase is not configured
@@ -87,6 +102,48 @@ export const userService = {
       return null;
     } catch (error) {
       console.error("Error fetching user:", error);
+      throw error;
+    }
+  },
+
+  getUserByEmail: async (email: string): Promise<User | null> => {
+    if (!db) {
+      const users = await userService.getUsers();
+      return users.find((u) => u.email === email) || null;
+    }
+
+    try {
+      const q = query(collection(db, COLLECTION_NAME), where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const docSnap = querySnapshot.docs[0];
+        const user = { id: docSnap.id, ...docSnap.data() } as User;
+        
+        // Ensure superadmin always has admin role
+        if (user.email === SUPERADMIN_EMAIL && user.role !== 'admin') {
+          user.role = 'admin';
+          updateDoc(doc(db, COLLECTION_NAME, user.id!), { role: 'admin' }).catch(console.error);
+        }
+        
+        return user;
+      }
+      
+      // If superadmin doesn't exist, create it
+      if (email === SUPERADMIN_EMAIL) {
+        try {
+          const { id, ...superAdminData } = defaultUser;
+          const docRef = await addDoc(collection(db, COLLECTION_NAME), superAdminData);
+          return { ...defaultUser, id: docRef.id };
+        } catch (e) {
+          console.error("Failed to create default superadmin in DB", e);
+          return defaultUser;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Error fetching user by email:", error);
       throw error;
     }
   },

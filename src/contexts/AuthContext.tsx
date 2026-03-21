@@ -37,10 +37,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async (email: string, password: string) => {
-    const users = await userService.getUsers();
-    const foundUser = users.find(u => u.email === email && u.password === password);
+    const foundUser = await userService.getUserByEmail(email);
     
-    if (foundUser) {
+    if (foundUser && foundUser.password === password) {
       // Don't store password in session
       const userSession = { ...foundUser };
       delete userSession.password;

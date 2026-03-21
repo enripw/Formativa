@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { tournamentService } from "../services/tournamentService";
 import { playerService } from "../services/playerService";
 import { Tournament, TournamentCategory, Group, Match } from "../types/tournament";
@@ -9,17 +9,15 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { getTeamsForCategory, generateGroups, generateRoundRobinFixtures } from "../services/tournamentLogic";
 import Modal from "../components/Modal";
 import { useAuth } from "../contexts/AuthContext";
+import { useState } from "react";
 
 export default function TournamentDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
 
-  const [tournament, setTournament] = useState<Tournament | null>(null);
-  const [categories, setCategories] = useState<TournamentCategory[]>([]);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
@@ -45,35 +43,34 @@ export default function TournamentDetails() {
     message: "",
   });
 
-  useEffect(() => {
-    if (id) {
-      loadData(id);
-    }
-  }, [id]);
-
-  const loadData = async (tournamentId: string) => {
-    try {
-      setLoading(true);
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['tournamentDetails', id],
+    queryFn: async () => {
+      if (!id) return null;
       const [tData, cData, pData] = await Promise.all([
-        tournamentService.getTournament(tournamentId),
-        tournamentService.getCategories(tournamentId),
+        tournamentService.getTournament(id),
+        tournamentService.getCategories(id),
         playerService.getPlayers()
       ]);
       
       if (tData && !tData.isPublic && !isSuperAdmin) {
-        navigate("/torneos");
-        return;
+        throw new Error("Unauthorized");
       }
       
-      setTournament(tData);
-      setCategories(cData);
-      setPlayers(pData);
-    } catch (error) {
-      console.error("Error loading tournament details:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return { tournament: tData, categories: cData, players: pData };
+    },
+    enabled: !!id,
+    retry: false,
+  });
+
+  const tournament = data?.tournament;
+  const categories = data?.categories || [];
+  const players = data?.players || [];
+
+  if (isError) {
+    navigate("/torneos");
+    return null;
+  }
 
   const showAlert = (title: string, message: string) => {
     setAlertMessage({ isOpen: true, title, message });
@@ -162,7 +159,7 @@ export default function TournamentDetails() {
       
       // Actualizar estado del torneo
       await tournamentService.updateTournament(id, { status: 'leveling' });
-      setTournament({ ...tournament, status: 'leveling' });
+      queryClient.invalidateQueries({ queryKey: ['tournament', id] });
       
       showAlert("Éxito", "Fase de nivelación generada con éxito.");
     } catch (error: any) {
@@ -173,8 +170,8 @@ export default function TournamentDetails() {
     }
   };
 
-  if (loading) return <LoadingSpinner message="Cargando torneo..." />;
-  if (!tournament) return <div className="p-8 text-center">Torneo no encontrado</div>;
+  if (isLoading) return <LoadingSpinner message="Cargando torneo..." />;
+  if (isError || !tournament) return <div className="p-8 text-center">Torneo no encontrado</div>;
 
   return (
     <div className="space-y-6">

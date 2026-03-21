@@ -1,36 +1,43 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { tournamentService } from "../services/tournamentService";
-import { Tournament } from "../types/tournament";
-import { Plus, Calendar, ChevronRight, Globe, Lock } from "lucide-react";
+import { Plus, Calendar, ChevronRight, Globe, Lock, RefreshCw } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth } from "../contexts/AuthContext";
 
+const PAGE_SIZE = 20;
+
 export default function TournamentsList() {
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  
   const isSuperAdmin = user?.role === 'admin' && user?.email === 'enripw@gmail.com';
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const { data: totalTournaments = 0 } = useQuery({
+    queryKey: ['tournamentsCount'],
+    queryFn: () => tournamentService.countTournaments(),
+  });
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const data = await tournamentService.getTournaments();
-      // Filter out non-public tournaments for non-super-admins
-      const filteredData = isSuperAdmin ? data : data.filter(t => t.isPublic);
-      // Sort by year descending
-      setTournaments([...filteredData].sort((a, b) => b.year - a.year));
-    } catch (error) {
-      console.error("Error loading tournaments:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+  } = useInfiniteQuery({
+    queryKey: ['tournamentsPaginated'],
+    queryFn: async ({ pageParam = null }) => {
+      return await tournamentService.getTournamentsPaginated(PAGE_SIZE, pageParam);
+    },
+    getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.lastDoc : undefined,
+    initialPageParam: null,
+  });
+
+  const rawTournaments = data?.pages.flatMap(page => page.tournaments) || [];
+  
+  // Filter out non-public tournaments for non-super-admins
+  const filteredData = isSuperAdmin ? rawTournaments : rawTournaments.filter(t => t.isPublic);
+  // Sort by year descending
+  const tournaments = [...filteredData].sort((a, b) => b.year - a.year);
 
   return (
     <div className="space-y-6">
@@ -48,8 +55,10 @@ export default function TournamentsList() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {loading ? (
+        {isLoading ? (
           <LoadingSpinner message="Cargando torneos..." />
+        ) : isError ? (
+          <div className="p-8 text-center text-red-500">Error al cargar los torneos.</div>
         ) : tournaments.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No se encontraron torneos.</div>
         ) : (
@@ -91,6 +100,29 @@ export default function TournamentsList() {
                 </div>
               </Link>
             ))}
+          </div>
+        )}
+        
+        {!isLoading && hasNextPage && (
+          <div className="p-4 border-t border-gray-100 flex justify-center">
+            <button
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              {isFetchingNextPage ? (
+                <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <RefreshCw className="w-5 h-5" />
+              )}
+              Cargar más torneos
+            </button>
+          </div>
+        )}
+        
+        {!isLoading && tournaments.length > 0 && (
+          <div className="p-4 border-t border-gray-100 bg-gray-50 text-xs text-gray-500 text-center">
+            Mostrando {tournaments.length} de {totalTournaments} torneos.
           </div>
         )}
       </div>

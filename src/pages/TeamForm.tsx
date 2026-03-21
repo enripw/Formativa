@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { teamService } from "../services/teamService";
 import { Team } from "../types";
 import { ArrowLeft, AlertCircle, Shield, Upload, Camera } from "lucide-react";
@@ -9,6 +10,7 @@ import { ProgressiveImage } from "../components/ProgressiveImage";
 export default function TeamForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isEditing = Boolean(id);
 
   const [formData, setFormData] = useState<Omit<Team, "id" | "createdAt">>({
@@ -19,36 +21,42 @@ export default function TeamForm() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(isEditing);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isEditing && id) {
-      loadTeam(id);
-    }
-  }, [id, isEditing]);
+  const { data: teamData, isLoading: isLoadingTeam } = useQuery({
+    queryKey: ['team', id],
+    queryFn: () => teamService.getTeamById(id!),
+    enabled: isEditing,
+  });
 
-  const loadTeam = async (teamId: string) => {
-    try {
-      const team = await teamService.getTeamById(teamId);
-      if (team) {
-        setFormData({
-          name: team.name,
-        });
-        if (team.logoUrl) {
-          setLogoPreview(team.logoUrl);
-        }
-      } else {
-        navigate("/equipos");
+  useEffect(() => {
+    if (teamData) {
+      setFormData({
+        name: teamData.name,
+      });
+      if (teamData.logoUrl) {
+        setLogoPreview(teamData.logoUrl);
       }
-    } catch (err) {
-      console.error("Error loading team:", err);
-      navigate("/equipos");
-    } finally {
-      setInitialLoading(false);
     }
-  };
+  }, [teamData]);
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (isEditing && id) {
+        await teamService.updateTeam(id, formData, logoFile || undefined);
+      } else {
+        await teamService.createTeam(formData, logoFile || undefined);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      queryClient.invalidateQueries({ queryKey: ['team', id] });
+      navigate("/equipos");
+    },
+    onError: (err: any) => {
+      setError(err.message || "Error al guardar el equipo");
+    }
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -73,26 +81,13 @@ export default function TeamForm() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
-
-    try {
-      if (isEditing && id) {
-        await teamService.updateTeam(id, formData, logoFile || undefined);
-      } else {
-        await teamService.createTeam(formData, logoFile || undefined);
-      }
-      navigate("/equipos");
-    } catch (err: any) {
-      setError(err.message || "Error al guardar el equipo");
-    } finally {
-      setLoading(false);
-    }
+    mutation.mutate();
   };
 
-  if (initialLoading) {
+  if (isEditing && isLoadingTeam) {
     return <LoadingSpinner message="Cargando datos del equipo..." />;
   }
 
@@ -196,10 +191,10 @@ export default function TeamForm() {
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={mutation.isPending}
             className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            {loading ? "Guardando..." : "Guardar Equipo"}
+            {mutation.isPending ? "Guardando..." : "Guardar Equipo"}
           </button>
         </div>
       </form>

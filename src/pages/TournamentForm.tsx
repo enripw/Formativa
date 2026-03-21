@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { tournamentService } from "../services/tournamentService";
 import { generateCategories } from "../services/tournamentLogic";
 import { ArrowLeft, AlertCircle } from "lucide-react";
@@ -8,8 +9,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 export default function TournamentForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(!!id);
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -25,49 +25,39 @@ export default function TournamentForm() {
     { name: "Categoría 2016", years: "2016" },
   ]);
 
-  useEffect(() => {
-    if (id) {
-      loadTournament(id);
-    }
-  }, [id]);
-
-  const loadTournament = async (tournamentId: string) => {
-    try {
-      setInitialLoading(true);
+  const { data: tournamentData, isLoading: isLoadingTournament } = useQuery({
+    queryKey: ['tournament', id],
+    queryFn: async () => {
+      if (!id) return null;
       const [tData, cData] = await Promise.all([
-        tournamentService.getTournament(tournamentId),
-        tournamentService.getCategories(tournamentId)
+        tournamentService.getTournament(id),
+        tournamentService.getCategories(id)
       ]);
+      return { tournament: tData, categories: cData };
+    },
+    enabled: !!id,
+  });
 
-      if (tData) {
-        setFormData({
-          name: tData.name,
-          year: tData.year,
-          isPublic: tData.isPublic || false,
-        });
-      }
-
-      if (cData && cData.length > 0) {
-        setCategories(cData.map(c => ({
-          id: c.id,
-          name: c.name,
-          years: c.birthYears.join(',')
-        })));
-      }
-    } catch (err) {
-      console.error("Error loading tournament:", err);
-      setError("Error al cargar el torneo");
-    } finally {
-      setInitialLoading(false);
+  useEffect(() => {
+    if (tournamentData?.tournament) {
+      setFormData({
+        name: tournamentData.tournament.name,
+        year: tournamentData.tournament.year,
+        isPublic: tournamentData.tournament.isPublic || false,
+      });
     }
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+    if (tournamentData?.categories && tournamentData.categories.length > 0) {
+      setCategories(tournamentData.categories.map(c => ({
+        id: c.id,
+        name: c.name,
+        years: c.birthYears.join(',')
+      })));
+    }
+  }, [tournamentData]);
 
-    try {
+  const mutation = useMutation({
+    mutationFn: async () => {
       let tournamentId = id;
 
       if (id) {
@@ -107,16 +97,25 @@ export default function TournamentForm() {
       });
 
       await tournamentService.saveCategories(mergedCategories);
-
+      return tournamentId;
+    },
+    onSuccess: (tournamentId) => {
+      queryClient.invalidateQueries({ queryKey: ['tournaments'] });
+      queryClient.invalidateQueries({ queryKey: ['tournament', id] });
       navigate(`/torneos/${tournamentId}`);
-    } catch (err: any) {
+    },
+    onError: (err: any) => {
       setError(err.message || "Error al guardar el torneo");
-    } finally {
-      setLoading(false);
     }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    mutation.mutate();
   };
 
-  if (initialLoading) return <LoadingSpinner message="Cargando torneo..." />;
+  if (!!id && isLoadingTournament) return <LoadingSpinner message="Cargando torneo..." />;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -254,10 +253,10 @@ export default function TournamentForm() {
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={mutation.isPending}
             className="px-6 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 disabled:opacity-50"
           >
-            {loading ? "Guardando..." : id ? "Guardar Cambios" : "Crear Torneo"}
+            {mutation.isPending ? "Guardando..." : id ? "Guardar Cambios" : "Crear Torneo"}
           </button>
         </div>
       </form>

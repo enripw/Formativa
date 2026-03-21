@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { userService } from "../services/userService";
 import { teamService } from "../services/teamService";
 import { User, Team } from "../types";
@@ -10,6 +11,7 @@ import { ProgressiveImage } from "../components/ProgressiveImage";
 export default function UserForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isEditing = Boolean(id);
 
   const [formData, setFormData] = useState<Omit<User, "id" | "createdAt">>({
@@ -20,9 +22,6 @@ export default function UserForm() {
     teamId: "",
   });
 
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(isEditing);
   const [error, setError] = useState<string | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   
@@ -31,47 +30,50 @@ export default function UserForm() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
+  const { data: teams = [] } = useQuery({
+    queryKey: ['teams'],
+    queryFn: () => teamService.getTeams(),
+  });
+
+  const { data: userData, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['user', id],
+    queryFn: () => userService.getUserById(id!),
+    enabled: isEditing,
+  });
+
   useEffect(() => {
-    loadTeams();
-    if (isEditing && id) {
-      loadUser(id);
-    }
-  }, [id, isEditing]);
-
-  const loadTeams = async () => {
-    try {
-      const data = await teamService.getTeams();
-      setTeams(data);
-    } catch (err) {
-      console.error("Error loading teams:", err);
-    }
-  };
-
-  const loadUser = async (userId: string) => {
-    try {
-      const user = await userService.getUserById(userId);
-      if (user) {
-        setFormData({
-          name: user.name,
-          email: user.email,
-          password: user.password || "",
-          role: user.role || "admin",
-          teamId: user.teamId || "",
-        });
-        setIsSuperAdmin(user.email === 'enripw@gmail.com');
-        if (user.photoUrl) {
-          setPhotoPreview(user.photoUrl);
-        }
-      } else {
-        navigate("/usuarios");
+    if (userData) {
+      setFormData({
+        name: userData.name,
+        email: userData.email,
+        password: userData.password || "",
+        role: userData.role || "admin",
+        teamId: userData.teamId || "",
+      });
+      setIsSuperAdmin(userData.email === 'enripw@gmail.com');
+      if (userData.photoUrl) {
+        setPhotoPreview(userData.photoUrl);
       }
-    } catch (err) {
-      console.error("Error loading user:", err);
-      navigate("/usuarios");
-    } finally {
-      setInitialLoading(false);
     }
-  };
+  }, [userData]);
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (isEditing && id) {
+        await userService.updateUser(id, formData, photoFile || undefined);
+      } else {
+        await userService.createUser(formData, photoFile || undefined);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['user', id] });
+      navigate("/usuarios");
+    },
+    onError: (err: any) => {
+      setError(err.message || "Error al guardar el usuario");
+    }
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -96,26 +98,13 @@ export default function UserForm() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
-
-    try {
-      if (isEditing && id) {
-        await userService.updateUser(id, formData, photoFile || undefined);
-      } else {
-        await userService.createUser(formData, photoFile || undefined);
-      }
-      navigate("/usuarios");
-    } catch (err: any) {
-      setError(err.message || "Error al guardar el usuario");
-    } finally {
-      setLoading(false);
-    }
+    mutation.mutate();
   };
 
-  if (initialLoading) {
+  if (isEditing && isLoadingUser) {
     return <LoadingSpinner message="Cargando datos del usuario..." />;
   }
 
@@ -359,10 +348,10 @@ export default function UserForm() {
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={mutation.isPending}
             className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            {loading ? (
+            {mutation.isPending ? (
               <>
                 <div className="animate-bounce">
                   <svg 

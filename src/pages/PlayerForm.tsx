@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { playerService } from "../services/playerService";
 import { teamService } from "../services/teamService";
 import { Player, Team } from "../types";
@@ -12,13 +13,11 @@ export default function PlayerForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const isAdmin = user?.role === 'admin';
   const isTeamAdmin = user?.role === 'team_admin';
 
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [teams, setTeams] = useState<Team[]>([]);
   
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -34,41 +33,63 @@ export default function PlayerForm() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
+  const { data: teamsData, isLoading: isLoadingTeams } = useQuery({
+    queryKey: ['teams'],
+    queryFn: () => teamService.getTeams(),
+    enabled: isAdmin,
+  });
+
+  const { data: playerData, isLoading: isLoadingPlayer } = useQuery({
+    queryKey: ['player', id],
+    queryFn: () => playerService.getPlayer(id!),
+    enabled: !!id,
+  });
+
   useEffect(() => {
-    const init = async () => {
-      try {
-        if (isAdmin) {
-          const teamsData = await teamService.getTeams();
-          setTeams(teamsData);
-        }
-
-        if (id) {
-          const player = await playerService.getPlayer(id);
-          if (player) {
-            setFormData({
-              firstName: player.firstName,
-              lastName: player.lastName,
-              birthDate: player.birthDate,
-              dni: player.dni,
-              teamId: player.teamId,
-              position: player.position || "",
-            });
-            if (player.photoUrl) {
-              setPhotoPreview(player.photoUrl);
-            }
-          }
-        } else if (isTeamAdmin && user?.teamId) {
-          setFormData(prev => ({ ...prev, teamId: user.teamId! }));
-        }
-      } catch (err) {
-        console.error("Error initializing form:", err);
-      } finally {
-        setInitialLoading(false);
+    if (playerData) {
+      setFormData({
+        firstName: playerData.firstName,
+        lastName: playerData.lastName,
+        birthDate: playerData.birthDate,
+        dni: playerData.dni,
+        teamId: playerData.teamId,
+        position: playerData.position || "",
+      });
+      if (playerData.photoUrl) {
+        setPhotoPreview(playerData.photoUrl);
       }
-    };
+    } else if (!id && isTeamAdmin && user?.teamId) {
+      setFormData(prev => ({ ...prev, teamId: user.teamId! }));
+    }
+  }, [playerData, id, isTeamAdmin, user?.teamId]);
 
-    init();
-  }, [id, isAdmin, isTeamAdmin, user?.teamId]);
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const existingPlayer = await playerService.checkDniExists(formData.dni);
+      if (existingPlayer && existingPlayer.id !== id) {
+        throw new Error(`El DNI ${formData.dni} ya está registrado a nombre de: ${existingPlayer.firstName} ${existingPlayer.lastName}.`);
+      }
+
+      const savePromise = id 
+        ? playerService.updatePlayer(id, formData, photoFile || undefined)
+        : playerService.addPlayer(formData, photoFile || undefined);
+        
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("La operación tardó demasiado (30s). Si estás intentando subir una foto, intenta guardar sin foto primero para descartar problemas con Firebase Storage.")), 30000)
+      );
+
+      return Promise.race([savePromise, timeoutPromise]);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+      queryClient.invalidateQueries({ queryKey: ['player', id] });
+      navigate("/jugadores");
+    },
+    onError: (err: any) => {
+      console.error("Error saving player:", err);
+      setError(err.message || "Error al guardar el jugador. Verifica la configuración y permisos de Firebase.");
+    }
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -97,7 +118,7 @@ export default function PlayerForm() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validar que todos los campos estén completos
@@ -106,40 +127,15 @@ export default function PlayerForm() {
       return;
     }
 
-    setLoading(true);
     setError(null);
-
-    try {
-      // Verificar si el DNI ya existe (solo si es un nuevo jugador o si el DNI cambió)
-      const existingPlayer = await playerService.checkDniExists(formData.dni);
-      if (existingPlayer && existingPlayer.id !== id) {
-        setError(`El DNI ${formData.dni} ya está registrado a nombre de: ${existingPlayer.firstName} ${existingPlayer.lastName}.`);
-        setLoading(false);
-        return;
-      }
-
-      // Add a timeout to prevent hanging indefinitely
-      const savePromise = id 
-        ? playerService.updatePlayer(id, formData, photoFile || undefined)
-        : playerService.addPlayer(formData, photoFile || undefined);
-        
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("La operación tardó demasiado (30s). Si estás intentando subir una foto, intenta guardar sin foto primero para descartar problemas con Firebase Storage.")), 30000)
-      );
-
-      await Promise.race([savePromise, timeoutPromise]);
-      navigate("/jugadores");
-    } catch (err: any) {
-      console.error("Error saving player:", err);
-      setError(err.message || "Error al guardar el jugador. Verifica la configuración y permisos de Firebase.");
-    } finally {
-      setLoading(false);
-    }
+    mutation.mutate();
   };
 
-  if (initialLoading) {
+  if (isLoadingPlayer || (isAdmin && isLoadingTeams)) {
     return <LoadingSpinner message="Cargando datos del jugador..." />;
   }
+
+  const teams = teamsData || [];
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -320,10 +316,10 @@ export default function PlayerForm() {
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={mutation.isPending}
             className="px-6 py-2 bg-primary rounded-lg text-sm font-medium text-white hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {loading ? (
+            {mutation.isPending ? (
               <>
                 <div className="animate-bounce">
                   <svg 
